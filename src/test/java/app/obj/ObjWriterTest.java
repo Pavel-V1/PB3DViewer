@@ -20,7 +20,9 @@ public class ObjWriterTest {
                 new Vertex(1, 0, 0),
                 new Vertex(0, 1, 0)
         ));
-        m.getPolygons().add(new Polygon(List.of(0, 1, 2)));
+        m.getPolygons().add(new Polygon(List.of(0, 1, 2),
+                List.of(),
+                List.of()));
 
         StringWriter out = new StringWriter();
         new ObjWriter().write(m, out);
@@ -31,7 +33,6 @@ public class ObjWriterTest {
         assertTrue(s.contains("v 1.0 0.0 0.0"));
         assertTrue(s.contains("v 0.0 1.0 0.0"));
 
-        // проверяем, что индексы 1..N (а не 0..)
         assertTrue(s.contains("f 1 2 3"));
     }
 

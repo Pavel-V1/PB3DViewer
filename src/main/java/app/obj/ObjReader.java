@@ -3,6 +3,8 @@ package app.obj;
 import app.model.Polygon;
 import app.model.Model;
 import app.model.Vertex;
+import app.model.Normal;
+import app.model.TexCoord;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,6 +20,8 @@ public class ObjReader {
         Model model = new Model();
         List<Vertex> vertices = model.getVertices();
         List<Polygon> polygons = model.getPolygons();
+        List<TexCoord> texCoords = model.getTexCoords();
+        List<Normal> normals = model.getNormals();
 
         String line;
         while ((line = br.readLine()) != null) {
@@ -29,10 +33,14 @@ public class ObjReader {
 
             if (line.startsWith("v ")) {
                 vertices.add(parseVertex(line));
+            } else if (line.startsWith("vt ")) {
+                texCoords.add(parseTexCoord(line));
+            } else if (line.startsWith("vn ")) {
+                normals.add(parseNormal(line));
             } else if (line.startsWith("f ")) {
                 polygons.add(parsePolygon(line));
-
             }
+
         }
 
         return model;
@@ -53,17 +61,43 @@ public class ObjReader {
 
     private Polygon parsePolygon(String line) {
         String[] parts = line.split("\\s+");
-        if (parts.length < 4) {
-            throw new IllegalArgumentException("Некорректный полигон: " + line);
-        }
 
-        List<Integer> indices = new ArrayList<>();
+        List<Integer> v = new ArrayList<>();
+        List<Integer> vt = new ArrayList<>();
+        List<Integer> vn = new ArrayList<>();
+
         for (int i = 1; i < parts.length; i++) {
-            String token = parts[i];
-            String indexStr = token.split("/")[0];
-            indices.add(Integer.parseInt(indexStr) - 1);
+            String[] idx = parts[i].split("/");
+
+            v.add(Integer.parseInt(idx[0]) - 1);
+
+            if (idx.length > 1 && !idx[1].isEmpty()) {
+                vt.add(Integer.parseInt(idx[1]) - 1);
+            }
+
+            if (idx.length > 2) {
+                vn.add(Integer.parseInt(idx[2]) - 1);
+            }
         }
 
-        return new Polygon(indices);
+        return new Polygon(v, vt, vn);
     }
+
+    private TexCoord parseTexCoord(String line) {
+        String[] p = line.split("\\s+");
+        return new TexCoord(
+                Float.parseFloat(p[1]),
+                Float.parseFloat(p[2])
+        );
+    }
+
+    private Normal parseNormal(String line) {
+        String[] p = line.split("\\s+");
+        return new Normal(
+                Float.parseFloat(p[1]),
+                Float.parseFloat(p[2]),
+                Float.parseFloat(p[3])
+        );
+    }
+
 }
