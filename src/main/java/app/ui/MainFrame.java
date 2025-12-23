@@ -2,6 +2,8 @@ package app.ui;
 
 import app.model.Model;
 import app.obj.ObjReader;
+import app.obj.ObjWriter;
+import java.io.FileWriter;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -76,13 +78,23 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        JOptionPane.showMessageDialog(
-                this,
-                "Сохранение добавим следующим шагом (ObjWriter).",
-                "Пока не готово",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Save OBJ");
+
+        int result = chooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) return;
+
+        try (FileWriter fw = new FileWriter(chooser.getSelectedFile())) {
+            ObjWriter writer = new ObjWriter();
+            writer.write(currentModel, fw);
+
+            statusLabel.setText("Сохранено: " + chooser.getSelectedFile().getName());
+
+        } catch (Exception ex) {
+            showError("Не получилось сохранить модель", ex);
+        }
     }
+
 
     private void showError(String title, Exception ex) {
         JOptionPane.showMessageDialog(
