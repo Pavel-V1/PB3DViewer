@@ -54,7 +54,9 @@ public class MainFrame extends JFrame {
 
 
         add(statusLabel, BorderLayout.SOUTH);
-        add(new JLabel("Тут позже будет рендер модели", SwingConstants.CENTER), BorderLayout.CENTER);
+        RenderPanel renderPanel = new RenderPanel();
+        add(renderPanel, BorderLayout.CENTER);
+
         updateStatus();
     }
 
