@@ -39,4 +39,19 @@ public final class GraphicConveyor {
 
         return Matrix4.fromArray(m);
     }
+    /**
+     * Матрица модели (M) для вектора-столбца.
+     * Порядок: сначала масштаб, потом вращение, потом перенос:
+     * v_world = T * Rz * Ry * Rx * S * v_local
+     */
+    public static Matrix4 modelMatrix(Vector3 translation, Vector3 rotationRad, Vector3 scale) {
+        Matrix4 s  = Matrix4.scale(scale.x, scale.y, scale.z);
+        Matrix4 rx = Matrix4.rotationX(rotationRad.x);
+        Matrix4 ry = Matrix4.rotationY(rotationRad.y);
+        Matrix4 rz = Matrix4.rotationZ(rotationRad.z);
+        Matrix4 t  = Matrix4.translation(translation.x, translation.y, translation.z);
+
+        return t.mul(rz).mul(ry).mul(rx).mul(s);
+    }
+
 }
