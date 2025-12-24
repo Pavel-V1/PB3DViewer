@@ -94,4 +94,17 @@ public class Matrix4 {
     public float get(int row, int col) {
         return m[row][col];
     }
+    public static Matrix4 fromArray(float[][] values) {
+        if (values == null || values.length != 4) {
+            throw new IllegalArgumentException("Matrix must be 4x4");
+        }
+        float[][] v = new float[4][4];
+        for (int r = 0; r < 4; r++) {
+            if (values[r] == null || values[r].length != 4) {
+                throw new IllegalArgumentException("Matrix must be 4x4");
+            }
+            System.arraycopy(values[r], 0, v[r], 0, 4);
+        }
+        return new Matrix4(v);
+    }
 }
