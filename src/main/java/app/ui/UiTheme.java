@@ -10,24 +10,19 @@ public final class UiTheme {
     private UiTheme() {}
 
     public static void applyPinkTheme() {
-        // 1) Базовый Look&Feel (современный и стабильный)
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {}
 
-        // 2) Цвета (мягкие розовые, без “вырви-глаз”)
-        Color bg = new Color(255, 240, 247);       // фон
-        Color panel = new Color(255, 232, 242);    // панели
-        Color accent = new Color(232, 120, 170);   // акцент
-        Color text = new Color(50, 20, 35);        // текст
-        Color btn = new Color(255, 220, 236);      // кнопки
+        Color bg = new Color(255, 240, 247);
+        Color panel = new Color(255, 232, 242);
+        Color accent = new Color(232, 120, 170);
+        Color text = new Color(50, 20, 35);
+        Color btn = new Color(255, 220, 236);
         Color btnBorder = new Color(232, 120, 170);
 
-        // 3) Шрифт. Важно: Times New Roman иногда выглядит криво в UI.
-        // Но если ты прям хочешь — ставим его. Если не найдётся, Swing возьмёт замену.
         setGlobalFont(new Font("Times New Roman", Font.PLAIN, 20));
 
-        // 4) Прокидываем цвета через UIManager (это безопасно)
         UIManager.put("Panel.background", panel);
         UIManager.put("Viewport.background", bg);
 
@@ -48,7 +43,7 @@ public final class UiTheme {
         UIManager.put("Button.focus", accent);
 
         UIManager.put("OptionPane.background", bg);
-        UIManager.put("Panel.background", panel); // повтор норм
+        UIManager.put("Panel.background", panel);
     }
 
     private static void setGlobalFont(Font font) {
