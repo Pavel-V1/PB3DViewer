@@ -1,19 +1,28 @@
 package app.ui;
 
-import app.model.Model;
-import app.obj.ObjReader;
-import app.obj.ObjWriter;
-import java.io.FileWriter;
+import app.io.ObjFileService;     // или app.io.ObjFileService — как ты создала
+import app.scene.Scene;
+import app.scene.SceneController;
+import app.scene.SceneObject;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.io.FileReader;
+import java.io.File;
 
 public class MainFrame extends JFrame {
 
     private final JLabel statusLabel = new JLabel("Готово");
-    private Model currentModel;
+    private boolean suppressComboEvents = false;
+
+
+    private final Scene scene = new Scene();
+    private final SceneController sceneController = new SceneController(scene);
+    private final ObjFileService fileService = new ObjFileService();
+
+    private final DefaultComboBoxModel<SceneObject> sceneComboModel = new DefaultComboBoxModel<>();
+    private final JComboBox<SceneObject> sceneCombo = new JComboBox<>(sceneComboModel);
+
 
     public MainFrame() {
         super("PB3DViewer");
@@ -24,8 +33,29 @@ public class MainFrame extends JFrame {
         setJMenuBar(createMenuBar());
 
         setLayout(new BorderLayout());
+
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topPanel.add(new JLabel("Активная модель:"));
+
+        sceneCombo.setPreferredSize(new Dimension(260, 28));
+        sceneCombo.addActionListener(e -> {
+            if (suppressComboEvents) return;
+
+            int idx = sceneCombo.getSelectedIndex();
+            if (idx >= 0 && idx < scene.getObjects().size()) {
+                sceneController.setActiveIndex(idx);
+                updateStatus();
+            }
+        });
+
+
+        topPanel.add(sceneCombo);
+        add(topPanel, BorderLayout.NORTH);
+
+
         add(statusLabel, BorderLayout.SOUTH);
         add(new JLabel("Тут позже будет рендер модели", SwingConstants.CENTER), BorderLayout.CENTER);
+        updateStatus();
     }
 
     private JMenuBar createMenuBar() {
@@ -34,12 +64,20 @@ public class MainFrame extends JFrame {
         JMenu fileMenu = new JMenu("File");
         JMenuItem openItem = new JMenuItem("Open...");
         JMenuItem saveItem = new JMenuItem("Save...");
+        JMenuItem removeItem = new JMenuItem("Remove active");
+        removeItem.addActionListener(e -> onRemoveActive());
+
 
         openItem.addActionListener(e -> onOpen());
         saveItem.addActionListener(e -> onSave());
 
         fileMenu.add(openItem);
         fileMenu.add(saveItem);
+        fileMenu.add(openItem);
+        fileMenu.add(saveItem);
+        fileMenu.addSeparator();
+        fileMenu.add(removeItem);
+
 
         bar.add(fileMenu);
         return bar;
@@ -53,22 +91,27 @@ public class MainFrame extends JFrame {
         int result = chooser.showOpenDialog(this);
         if (result != JFileChooser.APPROVE_OPTION) return;
 
-        try (FileReader fr = new FileReader(chooser.getSelectedFile())) {
-            ObjReader reader = new ObjReader();
-            currentModel = reader.read(fr);
+        File file = chooser.getSelectedFile();
 
-            statusLabel.setText("Загружено: вершин = " +
-                    currentModel.getVertices().size() +
-                    ", полигонов = " +
-                    currentModel.getPolygons().size());
+        try {
+            var loadedModel = fileService.load(file);
+
+            SceneObject obj = sceneController.addModel(file.getName(), loadedModel);
+
+            sceneComboModel.addElement(obj);
+            sceneCombo.setSelectedIndex(sceneComboModel.getSize() - 1); // активная = последняя
+
+            updateStatus();
 
         } catch (Exception ex) {
             showError("Не получилось открыть модель", ex);
         }
     }
 
+
     private void onSave() {
-        if (currentModel == null) {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
             JOptionPane.showMessageDialog(
                     this,
                     "Сначала открой модель (File → Open).",
@@ -84,17 +127,16 @@ public class MainFrame extends JFrame {
         int result = chooser.showSaveDialog(this);
         if (result != JFileChooser.APPROVE_OPTION) return;
 
-        try (FileWriter fw = new FileWriter(chooser.getSelectedFile())) {
-            ObjWriter writer = new ObjWriter();
-            writer.write(currentModel, fw);
+        File file = chooser.getSelectedFile();
 
-            statusLabel.setText("Сохранено: " + chooser.getSelectedFile().getName());
+        try {
+            fileService.save(active.model(), file);
+            statusLabel.setText("Сохранено: " + file.getName());
 
         } catch (Exception ex) {
             showError("Не получилось сохранить модель", ex);
         }
     }
-
 
     private void showError(String title, Exception ex) {
         JOptionPane.showMessageDialog(
@@ -103,6 +145,52 @@ public class MainFrame extends JFrame {
                 "Ошибка",
                 JOptionPane.ERROR_MESSAGE
         );
+    }
+    private void onRemoveActive() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Remove", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        suppressComboEvents = true;
+        try {
+            int idx = scene.getActiveIndex();
+
+            // сначала удаляем из сцены
+            sceneController.removeActive();
+
+            // потом из комбобокса
+            sceneComboModel.removeElementAt(idx);
+
+            if (sceneComboModel.getSize() > 0) {
+                int newIdx = Math.min(idx, sceneComboModel.getSize() - 1);
+                sceneController.setActiveIndex(newIdx);
+                sceneCombo.setSelectedIndex(newIdx);
+            } else {
+                sceneController.setActiveIndex(-1);
+                sceneCombo.setSelectedIndex(-1);
+            }
+
+            updateStatus();
+        } finally {
+            suppressComboEvents = false;
+        }
+    }
+
+
+    private void updateStatus() {
+        int total = scene.getObjects().size();
+        SceneObject active = sceneController.getActive();
+
+        if (active == null) {
+            statusLabel.setText("Моделей: " + total + ". Активная: нет");
+        } else {
+            int v = active.model().getVertices().size();
+            int p = active.model().getPolygons().size();
+            statusLabel.setText("Моделей: " + total + ". Активная: " + active.name()
+                    + " | вершин=" + v + ", полигонов=" + p);
+        }
     }
 }
 
