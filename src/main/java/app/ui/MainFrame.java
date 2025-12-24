@@ -1,6 +1,6 @@
 package app.ui;
 
-import app.io.ObjFileService;     // или app.io.ObjFileService — как ты создала
+import app.io.ObjFileService;
 import app.scene.Scene;
 import app.scene.SceneController;
 import app.scene.SceneObject;
@@ -67,19 +67,28 @@ public class MainFrame extends JFrame {
         JMenuItem removeItem = new JMenuItem("Remove active");
         removeItem.addActionListener(e -> onRemoveActive());
 
+        JMenu editMenu = new JMenu("Edit");
+
+        JMenuItem removePoly = new JMenuItem("Remove polygon...");
+        removePoly.addActionListener(e -> onRemovePolygon());
+
+        JMenuItem removeVertex = new JMenuItem("Remove vertex...");
+        removeVertex.addActionListener(e -> onRemoveVertex());
+
+        editMenu.add(removePoly);
+        editMenu.add(removeVertex);
 
         openItem.addActionListener(e -> onOpen());
         saveItem.addActionListener(e -> onSave());
 
         fileMenu.add(openItem);
         fileMenu.add(saveItem);
-        fileMenu.add(openItem);
-        fileMenu.add(saveItem);
         fileMenu.addSeparator();
         fileMenu.add(removeItem);
 
-
         bar.add(fileMenu);
+        bar.add(editMenu);
+
         return bar;
     }
 
@@ -157,10 +166,8 @@ public class MainFrame extends JFrame {
         try {
             int idx = scene.getActiveIndex();
 
-            // сначала удаляем из сцены
             sceneController.removeActive();
 
-            // потом из комбобокса
             sceneComboModel.removeElementAt(idx);
 
             if (sceneComboModel.getSize() > 0) {
@@ -178,7 +185,6 @@ public class MainFrame extends JFrame {
         }
     }
 
-
     private void updateStatus() {
         int total = scene.getObjects().size();
         SceneObject active = sceneController.getActive();
@@ -192,6 +198,44 @@ public class MainFrame extends JFrame {
                     + " | вершин=" + v + ", полигонов=" + p);
         }
     }
+    private void onRemovePolygon() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Edit", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String input = JOptionPane.showInputDialog(this, "Индекс полигона (0..):", "Remove polygon", JOptionPane.QUESTION_MESSAGE);
+        if (input == null) return;
+
+        try {
+            int idx = Integer.parseInt(input.trim());
+            app.edit.ModelEditor.removePolygon(active.model(), idx);
+            updateStatus();
+        } catch (Exception ex) {
+            showError("Не получилось удалить полигон", ex);
+        }
+    }
+
+    private void onRemoveVertex() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Edit", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String input = JOptionPane.showInputDialog(this, "Индекс вершины (0..):", "Remove vertex", JOptionPane.QUESTION_MESSAGE);
+        if (input == null) return;
+
+        try {
+            int idx = Integer.parseInt(input.trim());
+            app.edit.ModelEditor.removeVertexAndPolygons(active.model(), idx);
+            updateStatus();
+        } catch (Exception ex) {
+            showError("Не получилось удалить вершину", ex);
+        }
+    }
+
 }
 
 
