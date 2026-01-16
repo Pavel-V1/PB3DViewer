@@ -53,7 +53,8 @@ public class MainFrame extends JFrame {
 
         add(statusLabel, BorderLayout.SOUTH);
 
-        renderPanel = new RenderPanel();
+        renderPanel = new RenderPanel(sceneController);
+
         add(renderPanel, BorderLayout.CENTER);
 
         updateStatus();
