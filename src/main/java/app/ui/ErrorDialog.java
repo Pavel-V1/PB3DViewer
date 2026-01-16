@@ -7,9 +7,10 @@ public final class ErrorDialog {
     private ErrorDialog() {}
 
     public static void show(Component parent, String title, Exception ex) {
+        String details = (ex == null || ex.getMessage() == null) ? "" : ex.getMessage();
         JOptionPane.showMessageDialog(
                 parent,
-                title + ":\n" + (ex == null ? "" : ex.getMessage()),
+                title + (details.isEmpty() ? "" : ":\n" + details),
                 "Ошибка",
                 JOptionPane.ERROR_MESSAGE
         );

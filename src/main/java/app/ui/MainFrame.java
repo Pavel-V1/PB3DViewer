@@ -121,6 +121,7 @@ public class MainFrame extends JFrame {
         } catch (Exception ex) {
             ErrorDialog.show(this, "Не получилось открыть модель", ex);
         }
+
     }
 
     private void onSave() {
@@ -150,8 +151,15 @@ public class MainFrame extends JFrame {
 
         try {
             fileService.save(active.model(), file);
+
             statusLabel.setText("Сохранено: " + file.getName());
-            renderPanel.repaint();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Модель успешно сохранена:\n" + file.getName(),
+                    "Сохранение",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
 
         } catch (Exception ex) {
             ErrorDialog.show(this, "Не получилось сохранить модель", ex);
