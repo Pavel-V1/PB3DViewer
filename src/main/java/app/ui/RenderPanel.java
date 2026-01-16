@@ -10,6 +10,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+import app.math.Matrix4;
+import app.math.Vector4;
+
+
 public class RenderPanel extends JPanel {
 
     private final SceneController sceneController;
@@ -47,22 +51,40 @@ public class RenderPanel extends JPanel {
         List<Vertex> vs = m.getVertices();
         List<Polygon> ps = m.getPolygons();
 
+        var tr = active.transform();
+
+        Matrix4 modelMatrix =
+                Matrix4.translation(tr.getTranslation().x, tr.getTranslation().y, tr.getTranslation().z)
+                        .mul(Matrix4.rotationZ(tr.getRotationRad().z))
+                        .mul(Matrix4.rotationY(tr.getRotationRad().y))
+                        .mul(Matrix4.rotationX(tr.getRotationRad().x))
+                        .mul(Matrix4.scale(tr.getScale().x, tr.getScale().y, tr.getScale().z));
+
+
         if (vs.isEmpty() || ps.isEmpty()) {
             g2.setColor(Color.BLACK);
             g2.drawString("Модель пустая (нет вершин/полигонов).", 10, 20);
             return;
         }
 
+        java.util.ArrayList<Vector4> tvs = new java.util.ArrayList<>(vs.size()); // преобразованные вершины
+        for (Vertex v : vs) {
+            Vector4 p = new Vector4(v.x(), v.y(), v.z(), 1f);
+            p = modelMatrix.mul(p);
+            tvs.add(p);
+        }
+
         // 1) ищем bounds по X/Y, чтобы красиво вписать
         float minX = Float.POSITIVE_INFINITY, maxX = Float.NEGATIVE_INFINITY;
         float minY = Float.POSITIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY;
 
-        for (Vertex v : vs) {
-            if (v.x() < minX) minX = v.x();
-            if (v.x() > maxX) maxX = v.x();
-            if (v.y() < minY) minY = v.y();
-            if (v.y() > maxY) maxY = v.y();
+        for (Vector4 v : tvs) {
+            if (v.x < minX) minX = v.x;
+            if (v.x > maxX) maxX = v.x;
+            if (v.y < minY) minY = v.y;
+            if (v.y > maxY) maxY = v.y;
         }
+
 
         float dx = Math.max(1e-6f, maxX - minX);
         float dy = Math.max(1e-6f, maxY - minY);
@@ -91,13 +113,13 @@ public class RenderPanel extends JPanel {
 
                 if (a < 0 || a >= vs.size() || b < 0 || b >= vs.size()) continue;
 
-                Vertex va = vs.get(a);
-                Vertex vb = vs.get(b);
+                Vector4 va = tvs.get(a);
+                Vector4 vb = tvs.get(b);
 
-                int x1 = cx + Math.round((va.x() - midX) * s);
-                int y1 = cy - Math.round((va.y() - midY) * s); // y инвертируем для экрана
-                int x2 = cx + Math.round((vb.x() - midX) * s);
-                int y2 = cy - Math.round((vb.y() - midY) * s);
+                int x1 = cx + Math.round((va.x - midX) * s);
+                int y1 = cy - Math.round((va.y - midY) * s);
+                int x2 = cx + Math.round((vb.x - midX) * s);
+                int y2 = cy - Math.round((vb.y - midY) * s);
 
                 g2.drawLine(x1, y1, x2, y2);
             }
