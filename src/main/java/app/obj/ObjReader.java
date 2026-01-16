@@ -67,21 +67,25 @@ public class ObjReader {
         List<Integer> vn = new ArrayList<>();
 
         for (int i = 1; i < parts.length; i++) {
-            String[] idx = parts[i].split("/");
+            String[] idx = parts[i].split("/", -1); // важно: -1 сохраняет пустые поля
 
+            if (idx.length < 1 || idx[0].isEmpty()) {
+                throw new IllegalArgumentException("Некорректная грань (нет индекса вершины): " + line);
+            }
             v.add(Integer.parseInt(idx[0]) - 1);
 
             if (idx.length > 1 && !idx[1].isEmpty()) {
                 vt.add(Integer.parseInt(idx[1]) - 1);
             }
 
-            if (idx.length > 2) {
+            if (idx.length > 2 && !idx[2].isEmpty()) {
                 vn.add(Integer.parseInt(idx[2]) - 1);
             }
         }
 
         return new Polygon(v, vt, vn);
     }
+
 
     private TexCoord parseTexCoord(String line) {
         String[] p = line.split("\\s+");

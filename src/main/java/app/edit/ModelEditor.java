@@ -3,8 +3,8 @@ package app.edit;
 import app.model.Model;
 import app.model.Polygon;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class ModelEditor {
 
@@ -18,10 +18,6 @@ public final class ModelEditor {
         model.getPolygons().remove(polygonIndex);
     }
 
-    /**
-     * Удаляет вершину и все полигоны, которые на неё ссылаются.
-     * Индексы остальных вершин НЕ перенумеровываются (безопасно).
-     */
     public static void removeVertexAndPolygons(Model model, int vertexIndex) {
         if (model == null) throw new IllegalArgumentException("model is null");
         if (vertexIndex < 0 || vertexIndex >= model.getVertices().size()) {
@@ -29,8 +25,20 @@ public final class ModelEditor {
         }
 
         model.getPolygons().removeIf(p -> usesVertex(p, vertexIndex));
+        model.getVertices().remove(vertexIndex);
+        
+        List<Polygon> fixed = new ArrayList<>(model.getPolygons().size());
+        for (Polygon p : model.getPolygons()) {
+            List<Integer> newV = new ArrayList<>(p.vertexIndices().size());
+            for (int vi : p.vertexIndices()) {
+                if (vi > vertexIndex) newV.add(vi - 1);
+                else newV.add(vi);
+            }
+            fixed.add(new Polygon(newV, p.texCoordIndices(), p.normalIndices()));
+        }
 
-        model.getVertices().set(vertexIndex, model.getVertices().get(vertexIndex));
+        model.getPolygons().clear();
+        model.getPolygons().addAll(fixed);
     }
 
     private static boolean usesVertex(Polygon p, int vertexIndex) {
@@ -40,4 +48,3 @@ public final class ModelEditor {
         return false;
     }
 }
-
