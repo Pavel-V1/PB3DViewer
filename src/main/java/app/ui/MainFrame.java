@@ -1,5 +1,6 @@
 package app.ui;
 
+import app.edit.ModelEditor;
 import app.io.ObjFileService;
 import app.scene.Scene;
 import app.scene.SceneController;
@@ -15,7 +16,6 @@ public class MainFrame extends JFrame {
     private final JLabel statusLabel = new JLabel("Готово");
     private boolean suppressComboEvents = false;
 
-
     private final Scene scene = new Scene();
     private final SceneController sceneController = new SceneController(scene);
     private final ObjFileService fileService = new ObjFileService();
@@ -23,6 +23,7 @@ public class MainFrame extends JFrame {
     private final DefaultComboBoxModel<SceneObject> sceneComboModel = new DefaultComboBoxModel<>();
     private final JComboBox<SceneObject> sceneCombo = new JComboBox<>(sceneComboModel);
 
+    private final RenderPanel renderPanel;
 
     public MainFrame() {
         super("PB3DViewer");
@@ -31,7 +32,6 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
 
         setJMenuBar(createMenuBar());
-
         setLayout(new BorderLayout());
 
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -48,13 +48,12 @@ public class MainFrame extends JFrame {
             }
         });
 
-
         topPanel.add(sceneCombo);
         add(topPanel, BorderLayout.NORTH);
 
-
         add(statusLabel, BorderLayout.SOUTH);
-        RenderPanel renderPanel = new RenderPanel();
+
+        renderPanel = new RenderPanel();
         add(renderPanel, BorderLayout.CENTER);
 
         updateStatus();
@@ -67,26 +66,25 @@ public class MainFrame extends JFrame {
         JMenuItem openItem = new JMenuItem("Открыть...");
         JMenuItem saveItem = new JMenuItem("Сохранить...");
         JMenuItem removeItem = new JMenuItem("Удалить активную модель");
-        removeItem.addActionListener(e -> onRemoveActive());
-
-        JMenu editMenu = new JMenu("Правка");
-
-        JMenuItem removePoly = new JMenuItem("Удалить полигон...");
-        removePoly.addActionListener(e -> onRemovePolygon());
-
-        JMenuItem removeVertex = new JMenuItem("Удалить вершину...");
-        removeVertex.addActionListener(e -> onRemoveVertex());
-
-        editMenu.add(removePoly);
-        editMenu.add(removeVertex);
 
         openItem.addActionListener(e -> onOpen());
         saveItem.addActionListener(e -> onSave());
+        removeItem.addActionListener(e -> onRemoveActive());
 
         fileMenu.add(openItem);
         fileMenu.add(saveItem);
         fileMenu.addSeparator();
         fileMenu.add(removeItem);
+
+        JMenu editMenu = new JMenu("Правка");
+        JMenuItem removePoly = new JMenuItem("Удалить полигон...");
+        JMenuItem removeVertex = new JMenuItem("Удалить вершину...");
+
+        removePoly.addActionListener(e -> onRemovePolygon());
+        removeVertex.addActionListener(e -> onRemoveVertex());
+
+        editMenu.add(removePoly);
+        editMenu.add(removeVertex);
 
         bar.add(fileMenu);
         bar.add(editMenu);
@@ -96,7 +94,7 @@ public class MainFrame extends JFrame {
 
     private void onOpen() {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Open OBJ");
+        chooser.setDialogTitle("Открыть OBJ");
         chooser.setFileFilter(new FileNameExtensionFilter("OBJ models (*.obj)", "obj"));
 
         int result = chooser.showOpenDialog(this);
@@ -109,16 +107,20 @@ public class MainFrame extends JFrame {
 
             SceneObject obj = sceneController.addModel(file.getName(), loadedModel);
 
-            sceneComboModel.addElement(obj);
-            sceneCombo.setSelectedIndex(sceneComboModel.getSize() - 1); // активная = последняя
+            suppressComboEvents = true;
+            try {
+                sceneComboModel.addElement(obj);
+                sceneCombo.setSelectedIndex(sceneComboModel.getSize() - 1); // активная = последняя
+            } finally {
+                suppressComboEvents = false;
+            }
 
             updateStatus();
 
         } catch (Exception ex) {
-            showError("Не получилось открыть модель", ex);
+            ErrorDialog.show(this, "Не получилось открыть модель", ex);
         }
     }
-
 
     private void onSave() {
         SceneObject active = sceneController.getActive();
@@ -134,33 +136,31 @@ public class MainFrame extends JFrame {
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Сохранить OBJ");
+        chooser.setFileFilter(new FileNameExtensionFilter("OBJ models (*.obj)", "obj"));
 
         int result = chooser.showSaveDialog(this);
         if (result != JFileChooser.APPROVE_OPTION) return;
 
         File file = chooser.getSelectedFile();
 
+        if (!file.getName().toLowerCase().endsWith(".obj")) {
+            file = new File(file.getParentFile(), file.getName() + ".obj");
+        }
+
         try {
             fileService.save(active.model(), file);
             statusLabel.setText("Сохранено: " + file.getName());
+            renderPanel.repaint();
 
         } catch (Exception ex) {
-            showError("Не получилось сохранить модель", ex);
+            ErrorDialog.show(this, "Не получилось сохранить модель", ex);
         }
     }
 
-    private void showError(String title, Exception ex) {
-        JOptionPane.showMessageDialog(
-                this,
-                title + ":\n" + ex.getMessage(),
-                "Ошибка",
-                JOptionPane.ERROR_MESSAGE
-        );
-    }
     private void onRemoveActive() {
         SceneObject active = sceneController.getActive();
         if (active == null) {
-            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Remove", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Файл", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -169,7 +169,6 @@ public class MainFrame extends JFrame {
             int idx = scene.getActiveIndex();
 
             sceneController.removeActive();
-
             sceneComboModel.removeElementAt(idx);
 
             if (sceneComboModel.getSize() > 0) {
@@ -182,8 +181,46 @@ public class MainFrame extends JFrame {
             }
 
             updateStatus();
+        } catch (Exception ex) {
+            ErrorDialog.show(this, "Не получилось удалить активную модель", ex);
         } finally {
             suppressComboEvents = false;
+        }
+    }
+
+    private void onRemovePolygon() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Правка", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Integer idx = InputDialogs.askInt(this, "Удалить полигон", "Индекс полигона (0..):");
+        if (idx == null) return;
+
+        try {
+            ModelEditor.removePolygon(active.model(), idx);
+            updateStatus();
+        } catch (Exception ex) {
+            ErrorDialog.show(this, "Не получилось удалить полигон", ex);
+        }
+    }
+
+    private void onRemoveVertex() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Правка", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Integer idx = InputDialogs.askInt(this, "Удалить вершину", "Индекс вершины (0..):");
+        if (idx == null) return;
+
+        try {
+            ModelEditor.removeVertexAndPolygons(active.model(), idx);
+            updateStatus();
+        } catch (Exception ex) {
+            ErrorDialog.show(this, "Не получилось удалить вершину", ex);
         }
     }
 
@@ -199,45 +236,6 @@ public class MainFrame extends JFrame {
             statusLabel.setText("Моделей: " + total + ". Активная: " + active.name()
                     + " | вершин=" + v + ", полигонов=" + p);
         }
+        renderPanel.repaint();
     }
-    private void onRemovePolygon() {
-        SceneObject active = sceneController.getActive();
-        if (active == null) {
-            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Edit", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        String input = JOptionPane.showInputDialog(this, "Индекс полигона (0..):", "Remove polygon", JOptionPane.QUESTION_MESSAGE);
-        if (input == null) return;
-
-        try {
-            int idx = Integer.parseInt(input.trim());
-            app.edit.ModelEditor.removePolygon(active.model(), idx);
-            updateStatus();
-        } catch (Exception ex) {
-            showError("Не получилось удалить полигон", ex);
-        }
-    }
-
-    private void onRemoveVertex() {
-        SceneObject active = sceneController.getActive();
-        if (active == null) {
-            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Edit", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        String input = JOptionPane.showInputDialog(this, "Индекс вершины (0..):", "Remove vertex", JOptionPane.QUESTION_MESSAGE);
-        if (input == null) return;
-
-        try {
-            int idx = Integer.parseInt(input.trim());
-            app.edit.ModelEditor.removeVertexAndPolygons(active.model(), idx);
-            updateStatus();
-        } catch (Exception ex) {
-            showError("Не получилось удалить вершину", ex);
-        }
-    }
-
 }
-
-
