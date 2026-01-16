@@ -63,18 +63,18 @@ public class MainFrame extends JFrame {
     private JMenuBar createMenuBar() {
         JMenuBar bar = new JMenuBar();
 
-        JMenu fileMenu = new JMenu("File");
-        JMenuItem openItem = new JMenuItem("Open...");
-        JMenuItem saveItem = new JMenuItem("Save...");
-        JMenuItem removeItem = new JMenuItem("Remove active");
+        JMenu fileMenu = new JMenu("Файл");
+        JMenuItem openItem = new JMenuItem("Открыть...");
+        JMenuItem saveItem = new JMenuItem("Сохранить...");
+        JMenuItem removeItem = new JMenuItem("Удалить активную модель");
         removeItem.addActionListener(e -> onRemoveActive());
 
-        JMenu editMenu = new JMenu("Edit");
+        JMenu editMenu = new JMenu("Правка");
 
-        JMenuItem removePoly = new JMenuItem("Remove polygon...");
+        JMenuItem removePoly = new JMenuItem("Удалить полигон...");
         removePoly.addActionListener(e -> onRemovePolygon());
 
-        JMenuItem removeVertex = new JMenuItem("Remove vertex...");
+        JMenuItem removeVertex = new JMenuItem("Удалить вершину...");
         removeVertex.addActionListener(e -> onRemoveVertex());
 
         editMenu.add(removePoly);
@@ -125,7 +125,7 @@ public class MainFrame extends JFrame {
         if (active == null) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Сначала открой модель (File → Open).",
+                    "Сначала открой модель (Файл → Открыть).",
                     "Нет модели",
                     JOptionPane.INFORMATION_MESSAGE
             );
@@ -133,7 +133,7 @@ public class MainFrame extends JFrame {
         }
 
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save OBJ");
+        chooser.setDialogTitle("Сохранить OBJ");
 
         int result = chooser.showSaveDialog(this);
         if (result != JFileChooser.APPROVE_OPTION) return;

@@ -18,10 +18,6 @@ public final class ModelEditor {
         model.getPolygons().remove(polygonIndex);
     }
 
-    /**
-     * Удаляет вершину и все полигоны, которые на неё ссылаются.
-     * Индексы остальных вершин НЕ перенумеровываются (безопасно).
-     */
     public static void removeVertexAndPolygons(Model model, int vertexIndex) {
         if (model == null) throw new IllegalArgumentException("model is null");
         if (vertexIndex < 0 || vertexIndex >= model.getVertices().size()) {
