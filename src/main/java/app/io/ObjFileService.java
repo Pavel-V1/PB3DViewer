@@ -1,4 +1,4 @@
-package app.io;
+package app.io;//читает через обжридер и сохранет через ритер
 
 import app.model.Model;
 import app.obj.ObjReader;

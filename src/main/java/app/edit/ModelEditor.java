@@ -6,7 +6,7 @@ import app.model.Polygon;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ModelEditor {
+public final class ModelEditor {//редактор модели
 
     private ModelEditor() {}
 
@@ -24,13 +24,10 @@ public final class ModelEditor {
             throw new IllegalArgumentException("vertexIndex out of range: " + vertexIndex);
         }
 
-        // 1) Удаляем полигоны, которые используют эту вершину
         model.getPolygons().removeIf(p -> usesVertex(p, vertexIndex));
 
-        // 2) Удаляем вершину (сдвигает индексы справа)
         model.getVertices().remove(vertexIndex);
 
-        // 3) Обновляем индексы вершин в оставшихся полигонах (> vertexIndex уменьшаем на 1)
         List<Polygon> fixed = new ArrayList<>(model.getPolygons().size());
         for (Polygon p : model.getPolygons()) {
             List<Integer> newV = new ArrayList<>(p.vertexIndices().size());

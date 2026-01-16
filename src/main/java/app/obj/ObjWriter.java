@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
-public class ObjWriter {
+public class ObjWriter {//сохраняет
 
     public void write(Model model, Writer writer) throws IOException {
         if (model == null) throw new IllegalArgumentException("model is null");

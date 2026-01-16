@@ -5,7 +5,7 @@ import app.model.Model;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class SceneObject {
+public final class SceneObject {//один объект сцены
     private final String id = UUID.randomUUID().toString();
     private String name;
     private final Model model;

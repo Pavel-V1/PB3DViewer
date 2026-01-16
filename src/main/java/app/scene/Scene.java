@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public final class Scene {
+public final class Scene {//хранит список загруженных моделей, умеет добавлять/удал их
     private final List<SceneObject> objects = new ArrayList<>();
     private int activeIndex = -1;
 

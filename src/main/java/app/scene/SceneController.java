@@ -5,7 +5,7 @@ import app.model.Model;
 import java.io.File;
 import java.util.Objects;
 
-public final class SceneController {
+public final class SceneController {//обертка над scene
 
     private final Scene scene;
 

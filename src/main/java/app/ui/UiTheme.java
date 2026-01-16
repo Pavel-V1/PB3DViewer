@@ -5,7 +5,7 @@ import javax.swing.plaf.FontUIResource;
 import java.awt.*;
 import java.util.Enumeration;
 
-public final class UiTheme {
+public final class UiTheme {//внешний вид интерфейса
 
     private UiTheme() {}
 

@@ -11,7 +11,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame {//главное окно приложения
 
     private final JLabel statusLabel = new JLabel("Готово");
     private boolean suppressComboEvents = false;

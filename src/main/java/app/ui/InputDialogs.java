@@ -3,7 +3,7 @@ package app.ui;
 import javax.swing.*;
 import java.awt.*;
 
-public final class InputDialogs {
+public final class InputDialogs {//для ввода чисел через диалог
     private InputDialogs() {}
 
     public static Integer askInt(Component parent, String title, String prompt) {

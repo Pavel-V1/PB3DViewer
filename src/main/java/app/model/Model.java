@@ -3,7 +3,7 @@ package app.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Model {
+public class Model {//хранит геометрию модели
     private final List<Vertex> vertices = new ArrayList<>();
     private final List<Polygon> polygons = new ArrayList<>();
     private final List<TexCoord> texCoords = new ArrayList<>();

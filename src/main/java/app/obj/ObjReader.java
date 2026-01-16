@@ -12,7 +12,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObjReader {
+public class ObjReader {//читает
 
     public Model read(Reader reader) throws IOException {
         BufferedReader br = new BufferedReader(reader);

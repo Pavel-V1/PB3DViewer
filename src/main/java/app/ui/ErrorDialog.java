@@ -3,7 +3,7 @@ package app.ui;
 import javax.swing.*;
 import java.awt.*;
 
-public final class ErrorDialog {
+public final class ErrorDialog {//утилита для отображения окна с ошибками
     private ErrorDialog() {}
 
     public static void show(Component parent, String title, Exception ex) {
