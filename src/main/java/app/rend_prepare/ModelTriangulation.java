@@ -18,7 +18,11 @@ public class ModelTriangulation {
         return newModel;
     }
 
-    private static List<Polygon> triangulate(List<Polygon> polygons, List<Vertex> modelVertices) {
+    public static List<Polygon> triangulate(List<Polygon> polygons, List<Vertex> modelVertices) {
+        if (polygons.isEmpty() || modelVertices.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         List<Polygon> triangles = new ArrayList<>();
 
         for (Polygon polygon : polygons) {
@@ -28,9 +32,10 @@ public class ModelTriangulation {
             }
             int n = vertices.size();
 
-            for (int i = 1; i < n - 1; i++) {
+            int index = polygon.vertexIndices().get(0);
+            for (int i = index + 1; i < index + n - 1; i++) {
                 List<Integer> v = new ArrayList<>();
-                v.add(0);
+                v.add(index);
                 v.add(i);
                 v.add(i + 1);
                 Polygon triangle = new Polygon(v, polygon.texCoordIndices(), polygon.normalIndices());
