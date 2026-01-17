@@ -14,14 +14,14 @@ public class PrepareTest {
     public void triangulationTest() {
         Model model = new Model();
         List<Vertex> vertices = new ArrayList<>();
-        vertices.add(new Vertex(2, 1, 0));
-        vertices.add(new Vertex(2, 2, 0));
-        vertices.add(new Vertex(1, 0, 0));
         vertices.add(new Vertex(1, 3, 0));
+        vertices.add(new Vertex(2, 2, 0));
+        vertices.add(new Vertex(2, 1, 0));
+        vertices.add(new Vertex(1, 0, 0));
         vertices.add(new Vertex(0, 1, 0));
         vertices.add(new Vertex(0, 2, 0));
-        vertices.add(new Vertex(0, 1, 1));
         vertices.add(new Vertex(0, 2, 1));
+        vertices.add(new Vertex(0, 1, 1));
         vertices.add(new Vertex(1, 1, 1));
         model.getVertices().addAll(vertices);
 

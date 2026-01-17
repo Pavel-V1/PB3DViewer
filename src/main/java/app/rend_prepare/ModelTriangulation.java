@@ -26,12 +26,7 @@ public class ModelTriangulation {
         List<Polygon> triangles = new ArrayList<>();
 
         for (Polygon polygon : polygons) {
-            List<Vertex> vertices = new ArrayList<>();
-            for (Integer index : polygon.vertexIndices()) {
-                vertices.add(modelVertices.get(index));
-            }
-            int n = vertices.size();
-
+            int n = polygon.vertexIndices().size();
             int index = polygon.vertexIndices().get(0);
             for (int i = index + 1; i < index + n - 1; i++) {
                 List<Integer> v = new ArrayList<>();
