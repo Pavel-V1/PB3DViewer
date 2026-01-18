@@ -23,9 +23,9 @@ public class PrepareTest {
         vertices.add(new Vertex(0, 2, 1));
         vertices.add(new Vertex(0, 1, 1));
         vertices.add(new Vertex(1, 1, 1));
-        model.getVertices().addAll(vertices);
+        model.getVertices().addAll(vertices); /// Добавляем вершины в модель.
 
-        List<Polygon> polygons = new ArrayList<>();
+        List<Polygon> polygons = new ArrayList<>(); /// Создаем полигоны в соответствии с вершинами.
         List<Integer> vi1 = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
             vi1.add(i);
@@ -41,9 +41,9 @@ public class PrepareTest {
             vi3.add(i);
         }
         polygons.add(new Polygon(vi3, null, null));
-        model.getPolygons().addAll(polygons);
+        model.getPolygons().addAll(polygons); /// Добавляем полигоны в модель.
 
-        List<Polygon> expectedPolygons = new ArrayList<>();
+        List<Polygon> expectedPolygons = new ArrayList<>(); /// Создаем список ожидаемых полигонов-треугольников.
         for (int i = 1; i < 5; i++) {
             List<Integer> pl = new ArrayList<>();
             pl.add(0);
@@ -64,15 +64,19 @@ public class PrepareTest {
         pl.add(8);
         expectedPolygons.add(new Polygon(pl, null, null));
 
-        Model newModel = ModelTriangulation.triangulate(model);
+        /// Получаем список реальных полигонов-треугольников.
         List<Polygon> newPolygonList = ModelTriangulation.triangulate(polygons, vertices);
 
         Assertions.assertEquals(expectedPolygons, newPolygonList);
-        Assertions.assertEquals(expectedPolygons, newModel.getPolygons());
     }
 
     @Test
-    public void normalsCalculateTest(){
+    public void normalsCalculatingTest(){
+        //
+    }
+
+    @Test
+    public void getNewModelTest() {
         //
     }
 }

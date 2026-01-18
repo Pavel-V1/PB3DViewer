@@ -1,23 +1,13 @@
 package app.rend_prepare;
 
-import app.model.Model;
+import app.math.Vector3;
 import app.model.Normal;
 import app.model.Polygon;
 import app.model.Vertex;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class NormalsCalculating {
-    public static Model calculateNormals(Model model) {
-        List<Normal> normals = calculateNormals(model.getPolygons(), model.getVertices());
-        Model newModel = new Model();
-        newModel.getTexCoords().addAll(model.getTexCoords());
-        newModel.getVertices().addAll(model.getVertices());
-        newModel.getPolygons().addAll(model.getPolygons());
-        newModel.getNormals().addAll(normals);
-        return newModel;
-    }
 
     public static List<Normal> calculateNormals(List<Polygon> polygons, List<Vertex> vertices) {
         if (polygons.isEmpty() || vertices.isEmpty()) {
@@ -27,14 +17,14 @@ public class NormalsCalculating {
         List<Normal> newNormals = new ArrayList<>();
 
         for (int i = 0; i < vertices.size(); i++) {
-            ArrayList<Normal> normalsOfPolygonsWithVertex = new ArrayList<>();
+            ArrayList<Normal> normalsOfPolygonsWithThisVertex = new ArrayList<>();
             for (Polygon polygon : polygons) {
                 if (polygon.vertexIndices().contains(i)) {
-                    normalsOfPolygonsWithVertex.add(calculateNormalForPolygon(polygon, vertices));
+                    normalsOfPolygonsWithThisVertex.add(calculateNormalForPolygon(polygon, vertices));
                 }
             }
 
-            if (normalsOfPolygonsWithVertex.isEmpty()) {
+            if (normalsOfPolygonsWithThisVertex.isEmpty()) {
                 continue;
             }
 
@@ -42,7 +32,7 @@ public class NormalsCalculating {
             float x = 0;
             float y = 0;
             float z = 0;
-            for (Normal norm : normalsOfPolygonsWithVertex) {
+            for (Normal norm : normalsOfPolygonsWithThisVertex) {
                 x += norm.x();
                 y += norm.y();
                 z += norm.z();
@@ -61,16 +51,38 @@ public class NormalsCalculating {
     }
 
     private static Normal calculateNormalForPolygon(Polygon polygon, List<Vertex> vertices) {
-        ArrayList<Vertex> list = new ArrayList<>();
+        ArrayList<Vertex> list = new ArrayList<>(); // Берем первые 3 вершины в полигоне.
         for (int i = 0; i < 3; i++) {
             int index = polygon.vertexIndices().get(i);
             list.add(vertices.get(index));
         }
-        // вот список из 3 вершин, нужно реализовать правильный порядок
-        // подбора векторов и затем выполнить их векторное произведение.
+
+        sortForVectors(list);
+
+        Vector3 v1 = new Vector3(
+                list.get(1).x() - list.get(0).x(),
+                list.get(1).y() - list.get(0).y(),
+                list.get(1).z() - list.get(0).z()
+        );
+        Vector3 v2 = new Vector3(
+                list.get(2).x() - list.get(0).x(),
+                list.get(2).y() - list.get(0).y(),
+                list.get(2).z() - list.get(0).z()
+        );
+
+        return new Normal(
+                v1.y * v2.z - v1.z * v2.y,
+                v1.z * v2.x - v1.x * v2.z,
+                v1.x * v2.y - v1.y * v2.x
+        );
     }
 
     private static void normalize(Normal normal) {
         //
+    }
+
+    private static void sortForVectors(ArrayList<Vertex> list) {
+        // Список из 3 вершин, нужно реализовать правильный порядок,
+        // по которому будет осуществляться подбор нужных векторов.
     }
 }
