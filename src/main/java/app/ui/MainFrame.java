@@ -90,6 +90,26 @@ public class MainFrame extends JFrame {//главное окно приложе�
         bar.add(fileMenu);
         bar.add(editMenu);
 
+        JMenu transformMenu = new JMenu("Трансформация");
+
+        JMenuItem translateItem = new JMenuItem("Переместить (X/Y/Z)...");
+        JMenuItem rotateItem = new JMenuItem("Повернуть (X/Y/Z, градусы)...");
+        JMenuItem scaleItem = new JMenuItem("Масштабировать (X/Y/Z)...");
+        JMenuItem resetItem = new JMenuItem("Сбросить трансформации");
+
+        translateItem.addActionListener(e -> onTranslate());
+        rotateItem.addActionListener(e -> onRotate());
+        scaleItem.addActionListener(e -> onScale());
+        resetItem.addActionListener(e -> onResetTransform());
+
+        transformMenu.add(translateItem);
+        transformMenu.add(rotateItem);
+        transformMenu.add(scaleItem);
+        transformMenu.addSeparator();
+        transformMenu.add(resetItem);
+
+        bar.add(transformMenu);
+
         return bar;
     }
 
@@ -233,6 +253,71 @@ public class MainFrame extends JFrame {//главное окно приложе�
         }
     }
 
+    private void onTranslate() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Трансформация", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Float tx = InputDialogs.askFloat(this, "Перемещение", "tx:");
+        if (tx == null) return;
+        Float ty = InputDialogs.askFloat(this, "Перемещение", "ty:");
+        if (ty == null) return;
+        Float tz = InputDialogs.askFloat(this, "Перемещение", "tz:");
+        if (tz == null) return;
+
+        active.transform().setTranslation(tx, ty, tz);
+        updateStatus();
+    }
+
+    private void onRotate() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Трансформация", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Float rxDeg = InputDialogs.askFloat(this, "Поворот (градусы)", "rx:");
+        if (rxDeg == null) return;
+        Float ryDeg = InputDialogs.askFloat(this, "Поворот (градусы)", "ry:");
+        if (ryDeg == null) return;
+        Float rzDeg = InputDialogs.askFloat(this, "Поворот (градусы)", "rz:");
+        if (rzDeg == null) return;
+
+        float k = (float) (Math.PI / 180.0);
+        active.transform().setRotationRad(rxDeg * k, ryDeg * k, rzDeg * k);
+        updateStatus();
+    }
+
+    private void onScale() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Трансформация", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Float sx = InputDialogs.askFloat(this, "Масштаб", "sx:");
+        if (sx == null) return;
+        Float sy = InputDialogs.askFloat(this, "Масштаб", "sy:");
+        if (sy == null) return;
+        Float sz = InputDialogs.askFloat(this, "Масштаб", "sz:");
+        if (sz == null) return;
+
+        active.transform().setScale(sx, sy, sz);
+        updateStatus();
+    }
+
+    private void onResetTransform() {
+        SceneObject active = sceneController.getActive();
+        if (active == null) {
+            JOptionPane.showMessageDialog(this, "Нет активной модели.", "Трансформация", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        active.transform().reset();
+        updateStatus();
+    }
+
     private void updateStatus() {
         int total = scene.getObjects().size();
         SceneObject active = sceneController.getActive();
@@ -247,4 +332,5 @@ public class MainFrame extends JFrame {//главное окно приложе�
         }
         renderPanel.repaint();
     }
+
 }

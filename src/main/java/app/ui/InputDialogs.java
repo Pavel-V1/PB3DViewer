@@ -13,5 +13,13 @@ public final class InputDialogs {//для ввода чисел через ди�
         if (input.isEmpty()) return null;
         return Integer.parseInt(input);
     }
+    public static Float askFloat(Component parent, String title, String prompt) {
+        String input = JOptionPane.showInputDialog(parent, prompt, title, JOptionPane.QUESTION_MESSAGE);
+        if (input == null) return null;
+        input = input.trim().replace(',', '.');
+        if (input.isEmpty()) return null;
+        return Float.parseFloat(input);
+    }
+
 }
 
