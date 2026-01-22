@@ -16,12 +16,11 @@ public class ModelTriangulation {
 
         for (Polygon polygon : polygons) {
             int n = polygon.vertexIndices().size();
-            int index = polygon.vertexIndices().get(0);
-            for (int i = index + 1; i < index + n - 1; i++) {
+            for (int i = 1; i < n - 1; i++) {
                 List<Integer> v = new ArrayList<>();
-                v.add(index);
-                v.add(i);
-                v.add(i + 1);
+                v.add(polygon.vertexIndices().get(0));
+                v.add(polygon.vertexIndices().get(i));
+                v.add(polygon.vertexIndices().get(i + 1));
                 Polygon triangle = new Polygon(v, polygon.texCoordIndices(), polygon.normalIndices());
                 triangles.add(triangle);
             }

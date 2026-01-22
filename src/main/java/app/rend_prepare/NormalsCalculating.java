@@ -43,7 +43,7 @@ public class NormalsCalculating {
             z /= counter;
 
             Normal normal = new Normal(x, y, z);
-            normalize(normal);
+            normal = normalize(normal);
             newNormals.add(normal);
         }
 
@@ -57,8 +57,6 @@ public class NormalsCalculating {
             list.add(vertices.get(index));
         }
 
-        sortForVectors(list);
-
         Vector3 v1 = new Vector3(
                 list.get(1).x() - list.get(0).x(),
                 list.get(1).y() - list.get(0).y(),
@@ -70,19 +68,15 @@ public class NormalsCalculating {
                 list.get(2).z() - list.get(0).z()
         );
 
-        return new Normal(
+        return normalize(new Normal(
                 v1.y * v2.z - v1.z * v2.y,
                 v1.z * v2.x - v1.x * v2.z,
                 v1.x * v2.y - v1.y * v2.x
-        );
+        ));
     }
 
-    private static void normalize(Normal normal) {
-        //
-    }
-
-    private static void sortForVectors(ArrayList<Vertex> list) {
-        // Список из 3 вершин, нужно реализовать правильный порядок,
-        // по которому будет осуществляться подбор нужных векторов.
+    private static Normal normalize(Normal normal) {
+        double l = Math.sqrt(Math.pow(normal.x(), 2) + Math.pow(normal.y(), 2) + Math.pow(normal.z(), 2));
+        return new Normal((float) (normal.x() / l), (float) (normal.y() / l), (float) (normal.z() / l));
     }
 }
