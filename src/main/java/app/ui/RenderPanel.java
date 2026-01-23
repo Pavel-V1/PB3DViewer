@@ -54,12 +54,16 @@ public class RenderPanel extends JPanel {
 
         var tr = active.transform();
 
-        Matrix4 modelMatrix =
-                Matrix4.translation(tr.getTranslation().x, tr.getTranslation().y, tr.getTranslation().z)
-                        .mul(Matrix4.rotationZ(tr.getRotationRad().z))
+        Matrix4 rsMatrix = // RS (без переноса)
+                Matrix4.rotationZ(tr.getRotationRad().z)
                         .mul(Matrix4.rotationY(tr.getRotationRad().y))
                         .mul(Matrix4.rotationX(tr.getRotationRad().x))
                         .mul(Matrix4.scale(tr.getScale().x, tr.getScale().y, tr.getScale().z));
+
+        Matrix4 modelMatrix = // TRS (с переносом)
+                Matrix4.translation(tr.getTranslation().x, tr.getTranslation().y, tr.getTranslation().z)
+                        .mul(rsMatrix);
+
 
 
         if (vs.isEmpty() || ps.isEmpty()) {
@@ -68,18 +72,24 @@ public class RenderPanel extends JPanel {
             return;
         }
 
-        java.util.ArrayList<Vector4> tvs = new java.util.ArrayList<>(vs.size()); // преобразованные вершины
+        java.util.ArrayList<Vector4> tvsNoT = new java.util.ArrayList<>(vs.size()); // без переноса (RS)
+        java.util.ArrayList<Vector4> tvs = new java.util.ArrayList<>(vs.size());   // с переносом (TRS)
+
         for (Vertex v : vs) {
             Vector4 p = new Vector4(v.x(), v.y(), v.z(), 1f);
-            p = modelMatrix.mul(p);
-            tvs.add(p);
+
+            Vector4 pNoT = rsMatrix.mul(p);
+            Vector4 pFull = modelMatrix.mul(p);
+
+            tvsNoT.add(pNoT);
+            tvs.add(pFull);
         }
 
         // 1) ищем bounds по X/Y, чтобы красиво вписать
         float minX = Float.POSITIVE_INFINITY, maxX = Float.NEGATIVE_INFINITY;
         float minY = Float.POSITIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY;
 
-        for (Vector4 v : tvs) {
+        for (Vector4 v : tvsNoT) {
             if (v.x < minX) minX = v.x;
             if (v.x > maxX) maxX = v.x;
             if (v.y < minY) minY = v.y;
@@ -126,10 +136,17 @@ public class RenderPanel extends JPanel {
                 Vector4 va = tvs.get(a);
                 Vector4 vb = tvs.get(b);
 
-                int x1 = cx + Math.round((va.x - midX) * s);
-                int y1 = cy - Math.round((va.y - midY) * s);
-                int x2 = cx + Math.round((vb.x - midX) * s);
-                int y2 = cy - Math.round((vb.y - midY) * s);
+                float depth = 600f; //дистанция до камеры
+
+                float k1 = depth / (depth + va.z);
+                float k2 = depth / (depth + vb.z);
+
+                int x1 = cx + Math.round((va.x - midX) * s * k1);
+                int y1 = cy - Math.round((va.y - midY) * s * k1);
+
+                int x2 = cx + Math.round((vb.x - midX) * s * k2);
+                int y2 = cy - Math.round((vb.y - midY) * s * k2);
+
 
                 g2.drawLine(x1, y1, x2, y2);
             }
