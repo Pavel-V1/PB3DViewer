@@ -8,6 +8,7 @@ import app.scene.SceneObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 import app.math.Matrix4;
@@ -102,6 +103,15 @@ public class RenderPanel extends JPanel {
         g2.setColor(Color.BLACK);
 
         // рисуем каркас: для каждого полигона соединяем вершины по кругу
+        drawMesh(g2, ps, vs, tvs, cx, cy, s, midX, midY);
+
+        // подпись
+        g2.drawString("Активная: " + active.name() + " | каркас (X/Y)", 10, 20);
+    }
+
+    private static void drawMesh(Graphics2D g2, List<Polygon> ps, List<Vertex> vs,
+                             ArrayList<Vector4> tvs, int cx, int cy, float s, float midX, float midY) {
+
         for (Polygon p : ps) {
             List<Integer> idxs = p.vertexIndices();
             int n = idxs.size();
@@ -124,8 +134,5 @@ public class RenderPanel extends JPanel {
                 g2.drawLine(x1, y1, x2, y2);
             }
         }
-
-        // подпись
-        g2.drawString("Активная: " + active.name() + " | каркас (X/Y)", 10, 20);
     }
 }
