@@ -5,6 +5,8 @@ import app.io.ObjFileService;
 import app.scene.Scene;
 import app.scene.SceneController;
 import app.scene.SceneObject;
+import app.edit.ModelTransformApplier;
+
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -170,7 +172,24 @@ public class MainFrame extends JFrame {//главное окно приложе�
         }
 
         try {
-            fileService.save(active.model(), file);
+            int choice = JOptionPane.showOptionDialog(
+                    this,
+                    "Как сохранить модель?",
+                    "Сохранение",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    new Object[]{"Исходную (без трансформаций)", "С трансформациями"},
+                    "Исходную (без трансформаций)"
+            );
+
+            if (choice == JOptionPane.CLOSED_OPTION) return;
+
+            var modelToSave = (choice == 1)
+                    ? ModelTransformApplier.copyWithAppliedTransform(active.model(), active.transform())
+                    : active.model();
+
+            fileService.save(modelToSave, file);
 
             statusLabel.setText("Сохранено: " + file.getName());
 
