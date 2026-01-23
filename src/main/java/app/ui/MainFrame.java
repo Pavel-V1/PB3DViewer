@@ -26,6 +26,7 @@ public class MainFrame extends JFrame {//главное окно приложе�
     private final JComboBox<SceneObject> sceneCombo = new JComboBox<>(sceneComboModel);
 
     private final RenderPanel renderPanel;
+    private final TransformPanel transformPanel;
 
     public MainFrame() {
         super("PB3DViewer");
@@ -56,6 +57,9 @@ public class MainFrame extends JFrame {//главное окно приложе�
         add(statusLabel, BorderLayout.SOUTH);
 
         renderPanel = new RenderPanel(sceneController);
+
+        transformPanel = new TransformPanel(sceneController);
+        add(transformPanel, BorderLayout.EAST);
 
         add(renderPanel, BorderLayout.CENTER);
 
@@ -349,6 +353,7 @@ public class MainFrame extends JFrame {//главное окно приложе�
             statusLabel.setText("Моделей: " + total + ". Активная: " + active.name()
                     + " | вершин=" + v + ", полигонов=" + p);
         }
+        transformPanel.syncFromActive();
         renderPanel.repaint();
     }
 

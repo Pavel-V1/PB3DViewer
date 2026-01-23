@@ -126,10 +126,17 @@ public class RenderPanel extends JPanel {
                 Vector4 va = tvs.get(a);
                 Vector4 vb = tvs.get(b);
 
-                int x1 = cx + Math.round((va.x - midX) * s);
-                int y1 = cy - Math.round((va.y - midY) * s);
-                int x2 = cx + Math.round((vb.x - midX) * s);
-                int y2 = cy - Math.round((vb.y - midY) * s);
+                float depth = 600f; //дистанция до камеры
+
+                float k1 = depth / (depth + va.z);
+                float k2 = depth / (depth + vb.z);
+
+                int x1 = cx + Math.round((va.x - midX) * s * k1);
+                int y1 = cy - Math.round((va.y - midY) * s * k1);
+
+                int x2 = cx + Math.round((vb.x - midX) * s * k2);
+                int y2 = cy - Math.round((vb.y - midY) * s * k2);
+
 
                 g2.drawLine(x1, y1, x2, y2);
             }
