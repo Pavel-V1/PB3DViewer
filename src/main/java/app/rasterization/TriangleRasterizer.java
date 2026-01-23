@@ -14,12 +14,15 @@ public class TriangleRasterizer extends JPanel {
     private static ArrayList<Triangle> mainArrayT = new ArrayList<Triangle>();
     private float[] zBuffer;
 
-    public static void makeTriangle(Vertex a, Vertex b, Vertex c, Color c1, Color c2, Color c3) {
-        mainArrayT.add(new Triangle(a, b, c, c1, c2, c3));
+    public static void makeTriangle(int size, Vertex a, Vertex b, Vertex c, Color c1, Color c2, Color c3) {
+        Vertex a0 = new Vertex(a.x() * size, a.y() * size, a.z() * size);
+        Vertex b0 = new Vertex(b.x() * size, b.y() * size, b.z() * size);
+        Vertex c0 = new Vertex(c.x() * size, c.y() * size, c.z() * size);
+        mainArrayT.add(new Triangle(a0, b0, c0, c1, c2, c3));
     }
 
-    public static void makeTriangle(Vertex a, Vertex b, Vertex c, Color cl) {
-        mainArrayT.add(new Triangle(a, b, c, cl, cl, cl));
+    public static void makeTriangle(int size, Vertex a, Vertex b, Vertex c, Color cl) {
+        makeTriangle(size, a, b, c, cl, cl, cl);
     }
 
     public static void removeTriangles() {
@@ -47,7 +50,6 @@ public class TriangleRasterizer extends JPanel {
         int w = getWidth();
         int h = getHeight();
 
-        // 1. Инициализация или очистка Z-буфера
         if (canvas == null || canvas.getWidth() != w || canvas.getHeight() != h) {
             canvas = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             pixels = ((DataBufferInt) canvas.getRaster().getDataBuffer()).getData();
@@ -121,11 +123,7 @@ public class TriangleRasterizer extends JPanel {
     }
 
     private double abs(double x) {
-        if (x < 0) {
-            return -x;
-        } else {
-            return x;
-        }
+        return x < 0 ? -x : x;
     }
 
     private Color interpolateColor(double[] baryCoords, Color c1, Color c2, Color c3) {

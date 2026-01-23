@@ -8,9 +8,9 @@ import java.awt.*;
 public class PolygonRasterizationTest {
     public static void main(String[] args) {
         add();
-        TriangleRasterizer.launch();
+        TriangleRasterizer.launch(); // 1 окно
 
-        JFrame frame = new JFrame("Triangle Rasterization");
+        JFrame frame = new JFrame("Triangle Rasterization"); // 2 окно
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(TriangleRasterizer.getTriangleRasterizer());
         frame.pack();
@@ -40,14 +40,14 @@ public class PolygonRasterizationTest {
         Color c2 = Color.BLACK;
         Color c3 = Color.GRAY;
 
-        TriangleRasterizer.makeTriangle(a, b, c, c1, c2, c3);
-        TriangleRasterizer.makeTriangle(a1, b1, d, c1);
-        TriangleRasterizer.makeTriangle(p1, p2, p3, c2);
-        TriangleRasterizer.makeTriangle(new Vertex(p1.x() + 20, p1.y() + 20, 1),
+        TriangleRasterizer.makeTriangle(1, a, b, c, c1, c2, c3);
+        TriangleRasterizer.makeTriangle(1, a1, b1, d, c1);
+        TriangleRasterizer.makeTriangle(1, p1, p2, p3, c2);
+        TriangleRasterizer.makeTriangle(1, new Vertex(p1.x() + 20, p1.y() + 20, 1),
                 new Vertex(p2.x() + 20, p2.y() + 20, 1),
                 new Vertex(p3.x() + 20, p3.y() + 20, 1), c3);
-        TriangleRasterizer.makeTriangle(z1, z2, z3, c3);
-        TriangleRasterizer.makeTriangle(new Vertex(270, 270, 0), new Vertex(270, 300, 0),
+        TriangleRasterizer.makeTriangle(1, z1, z2, z3, c3);
+        TriangleRasterizer.makeTriangle(1, new Vertex(270, 270, 0), new Vertex(270, 300, 0),
                 new Vertex(300, 350, 0), Color.RED);
     }
 }
