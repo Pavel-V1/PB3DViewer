@@ -12,11 +12,12 @@ import java.awt.*;
 public final class TransformPanel extends JPanel {
 
     private final SceneController sceneController;
+    private final RenderPanel renderPanel;
 
     // Слайдеры
     private final JSlider tx = slider(-10, 10, 0);
     private final JSlider ty = slider(-10, 10, 0);
-    private final JSlider tz = slider(-200, 200, 0);
+    private final JSlider tz = slider(-10, 10, 0);
 
     private final JSlider rx = slider(-180, 180, 0);
     private final JSlider ry = slider(-180, 180, 0);
@@ -28,9 +29,9 @@ public final class TransformPanel extends JPanel {
 
     private boolean updating = false;
 
-    public TransformPanel(SceneController sceneController) {
+    public TransformPanel(SceneController sceneController, RenderPanel renderPanel) {
         this.sceneController = sceneController;
-
+        this.renderPanel = renderPanel;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         setPreferredSize(new Dimension(280, 10));
@@ -126,7 +127,7 @@ public final class TransformPanel extends JPanel {
         t.setScale(new Vector3(sx.getValue() / 100f, sy.getValue() / 100f, sz.getValue() / 100f));
 
         // перерисовать окно
-        SwingUtilities.getWindowAncestor(this).repaint();
+        renderPanel.repaint();
     }
 
     private void resetSlidersAndModel() {
@@ -143,7 +144,8 @@ public final class TransformPanel extends JPanel {
         } finally {
             updating = false;
         }
-        SwingUtilities.getWindowAncestor(this).repaint();
+        renderPanel.repaint();
+
     }
 
     private void setDefaults() {
