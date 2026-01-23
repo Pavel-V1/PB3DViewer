@@ -197,7 +197,7 @@ public class RenderPanel extends JPanel {
 
                     var eye = camera.eye();
                     var forward = camera.target().sub(eye).normalize();
-                    var right = forward.cross(camera.up()).normalize();
+                    var right = camera.up().cross(forward).normalize();
 
                     float panSpeed = 0.0025f * camera.distance();
                     camera.setTarget(
@@ -237,7 +237,7 @@ public class RenderPanel extends JPanel {
     private void moveTarget(int x, int y, int z) {
         var eye = camera.eye();
         var forward = camera.target().sub(eye).normalize();
-        var right = forward.cross(camera.up()).normalize();
+        var right = camera.up().cross(forward).normalize();
         var up = camera.up();
 
         float speed = 0.03f * camera.distance();
@@ -257,4 +257,5 @@ public class RenderPanel extends JPanel {
             @Override public void actionPerformed(ActionEvent e) { action.run(); }
         });
     }
+
 }
