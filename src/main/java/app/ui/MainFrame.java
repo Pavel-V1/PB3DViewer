@@ -16,6 +16,14 @@ import java.io.File;
 public class MainFrame extends JFrame {//главное окно приложения
 
     private final JLabel statusLabel = new JLabel("Готово");
+    private boolean drawWireframe = true;
+    private boolean useTexture = false;
+    private boolean useLighting = false;
+
+    public boolean isDrawWireframe() { return drawWireframe; }
+    public boolean isUseTexture() { return useTexture; }
+    public boolean isUseLighting() { return useLighting; }
+
     private boolean suppressComboEvents = false;
 
     private final Scene scene = new Scene();
@@ -115,6 +123,39 @@ public class MainFrame extends JFrame {//главное окно приложе�
         transformMenu.add(resetItem);
 
         bar.add(transformMenu);
+
+        JMenu renderMenu = new JMenu("Режимы отрисовки");
+
+        JCheckBoxMenuItem wireframeItem =
+                new JCheckBoxMenuItem("Рисовать полигональную сетку", drawWireframe);
+
+        JCheckBoxMenuItem textureItem =
+                new JCheckBoxMenuItem("Использовать текстуру", useTexture);
+
+        JCheckBoxMenuItem lightingItem =
+                new JCheckBoxMenuItem("Использовать освещение", useLighting);
+
+        wireframeItem.addActionListener(e -> {
+            drawWireframe = wireframeItem.isSelected();
+            renderPanel.repaint();
+        });
+
+        textureItem.addActionListener(e -> {
+            useTexture = textureItem.isSelected();
+            renderPanel.repaint();
+        });
+
+        lightingItem.addActionListener(e -> {
+            useLighting = lightingItem.isSelected();
+            renderPanel.repaint();
+        });
+
+        renderMenu.add(wireframeItem);
+        renderMenu.add(textureItem);
+        renderMenu.add(lightingItem);
+
+        bar.add(renderMenu);
+
 
         return bar;
     }
