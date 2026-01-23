@@ -65,11 +65,9 @@ public class MainFrame extends JFrame {//главное окно приложе�
         add(statusLabel, BorderLayout.SOUTH);
 
         renderPanel = new RenderPanel(sceneController);
-
-        transformPanel = new TransformPanel(sceneController);
-        add(transformPanel, BorderLayout.EAST);
-
         add(renderPanel, BorderLayout.CENTER);
+        transformPanel = new TransformPanel(sceneController, renderPanel);
+        add(transformPanel, BorderLayout.EAST);
 
         updateStatus();
     }
