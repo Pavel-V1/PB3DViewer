@@ -3,6 +3,9 @@ package app.ui;
 import app.model.Model;
 import app.model.Polygon;
 import app.model.Vertex;
+import app.rasterization.ModelRasterization;
+import app.rasterization.TriangleRasterizer;
+import app.rend_prepare.ModelTriangulation;
 import app.scene.SceneController;
 import app.scene.SceneObject;
 
@@ -110,10 +113,18 @@ public class RenderPanel extends JPanel {
         float midX = (minX + maxX) / 2f;
         float midY = (minY + maxY) / 2f;
 
+        boolean isTexEnabled = false; ///
+        List<Polygon> polygons = ModelTriangulation.triangulate(m.getPolygons(), m.getVertices());
+        m.getPolygons().clear();
+        m.getPolygons().addAll(polygons);
+        ModelRasterization.rasterizeModel(m, tvs, g, w, h, s, cx, cy, midX, midY, Color.ORANGE, Color.BLACK, Color.GRAY, isTexEnabled, null);
+
         g2.setColor(Color.BLACK);
 
-        // рисуем каркас: для каждого полигона соединяем вершины по кругу
-        drawMesh(g2, ps, vs, tvs, cx, cy, s, midX, midY);
+        boolean isMeshEnabled = true; /// Пока что так, а потом привяжу к кнопкам.
+        if (isMeshEnabled) {
+            drawMesh(g2, ps, vs, tvs, cx, cy, s, midX, midY);
+        }
 
         // подпись
         g2.drawString("Активная: " + active.name() + " | каркас (X/Y)", 10, 20);
@@ -146,7 +157,6 @@ public class RenderPanel extends JPanel {
 
                 int x2 = cx + Math.round((vb.x - midX) * s * k2);
                 int y2 = cy - Math.round((vb.y - midY) * s * k2);
-
 
                 g2.drawLine(x1, y1, x2, y2);
             }
