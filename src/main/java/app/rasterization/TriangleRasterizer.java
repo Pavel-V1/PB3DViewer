@@ -1,17 +1,24 @@
 package app.rasterization;
 
+import app.model.Vertex;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class TriangleRasterizer extends JPanel {
+    private BufferedImage canvas;
+    private int[] pixels;
     private static ArrayList<Triangle> mainArrayT = new ArrayList<Triangle>();
+    private float[] zBuffer;
 
-    public static void makeTriangle(Point a, Point b, Point c, Color c1, Color c2, Color c3) {
+    public static void makeTriangle(Vertex a, Vertex b, Vertex c, Color c1, Color c2, Color c3) {
         mainArrayT.add(new Triangle(a, b, c, c1, c2, c3));
     }
 
-    public static void makeTriangle(Point a, Point b, Point c, Color cl) {
+    public static void makeTriangle(Vertex a, Vertex b, Vertex c, Color cl) {
         mainArrayT.add(new Triangle(a, b, c, cl, cl, cl));
     }
 
@@ -36,47 +43,67 @@ public class TriangleRasterizer extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for (Triangle triangle : mainArrayT) {
-            rasterizeTriangle(g, triangle.a, triangle.b, triangle.c, triangle.c1, triangle.c2, triangle.c3);
+
+        int w = getWidth();
+        int h = getHeight();
+
+        // 1. Инициализация или очистка Z-буфера
+        if (canvas == null || canvas.getWidth() != w || canvas.getHeight() != h) {
+            canvas = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            pixels = ((DataBufferInt) canvas.getRaster().getDataBuffer()).getData();
+            zBuffer = new float[w * h];
         }
+        Arrays.fill(pixels, Integer.MAX_VALUE);
+        Arrays.fill(zBuffer, Float.POSITIVE_INFINITY);
+
+        for (Triangle triangle : mainArrayT) {
+            rasterizeTriangle(w, h, triangle.a, triangle.b, triangle.c, triangle.c1, triangle.c2, triangle.c3);
+        }
+        g.drawImage(canvas, 0, 0, null);
     }
 
-    public void rasterizeTriangle(Graphics g, Point a, Point b, Point c, Color c1, Color c2, Color c3) {
+    public void rasterizeTriangle(int width, int height, Vertex v1, Vertex v2, Vertex v3, Color c1, Color c2, Color c3) {
+        Point a = new Point((int)v1.x(), (int)v1.y());
+        Point b = new Point((int)v2.x(), (int)v2.y());
+        Point c = new Point((int)v3.x(), (int)v3.y());
+
         Point bigger = (a.y > b.y ? a : b);
         Point lower = (a.y < b.y ? a : b);
         Point top = bigger.y > c.y ? bigger : c;
         Point bottom = lower.y < c.y ? lower : c;
         Point middle = a != top && a != bottom ? a : b != top && b != bottom ? b : c;
 
-        for (int y = bottom.y; y < middle.y; y++) {
-            int x1 = ((y - bottom.y) * (middle.x - bottom.x) / (middle.y - bottom.y)) + bottom.x;
-            int x2 = ((y - bottom.y) * (top.x - bottom.x) / (top.y - bottom.y)) + bottom.x;
-            if (x1 > x2) {
-                int xt = x1;
-                x1 = x2;
-                x2 = xt;
-            }
-            for (int x = x1; x <= x2; x++) {
-                double[] baryCoords = calculateBaryCoords(new Point(x, y), a, b, c);
-                Color interpolatedColor = interpolateColor(baryCoords, c1, c2, c3);
-                    g.setColor(interpolatedColor);
-                    g.fillRect(x, y, 1, 1);
-            }
-        }
+        drawScanline(width, height, bottom.y, middle.y, bottom, middle, top, bottom, v1, v2, v3, c1, c2, c3);
+        drawScanline(width, height, middle.y, top.y, middle, top, top, bottom, v1, v2, v3, c1, c2, c3);
+    }
 
-        for (int y = middle.y; y < top.y; y++) {
-            int x1 = ((y - middle.y) * (top.x - middle.x) / (top.y - middle.y)) + middle.x;
+    private void drawScanline(int width, int height, int yStart, int yEnd, Point p1, Point p2, Point top,
+                              Point bottom, Vertex v1, Vertex v2, Vertex v3, Color c1, Color c2, Color c3) {
+        if (yStart == yEnd) return;
+        for (int y = yStart; y < yEnd; y++) {
+            if (y < 0 || y >= getHeight()) continue;
+
+            int x1 = ((y - yStart) * (p2.x - p1.x) / (yEnd - yStart)) + p1.x;
             int x2 = ((y - bottom.y) * (top.x - bottom.x) / (top.y - bottom.y)) + bottom.x;
-            if (x1 > x2) {
-                int xt = x1;
-                x1 = x2;
-                x2 = xt;
-            }
+
+            if (x1 > x2) { int t = x1; x1 = x2; x2 = t; }
+
             for (int x = x1; x <= x2; x++) {
-                double[] baryCoords = calculateBaryCoords(new Point(x, y), a, b, c);
-                Color interpolatedColor = interpolateColor(baryCoords, c1, c2, c3);
-                g.setColor(interpolatedColor);
-                g.fillRect(x, y, 1, 1);
+                if (x < 0 || x >= width) continue;
+
+                double[] bary = calculateBaryCoords(new Point(x, y),
+                        new Point((int)v1.x(), (int)v1.y()),
+                        new Point((int)v2.x(), (int)v2.y()),
+                        new Point((int)v3.x(), (int)v3.y()));
+
+                float currentZ = (float)(v1.z() * bary[0] + v2.z() * bary[1] + v3.z() * bary[2]);
+                int bufferIndex = y * width + x;
+
+                if (currentZ < zBuffer[bufferIndex]) {
+                    zBuffer[bufferIndex] = currentZ;
+                    Color col = interpolateColor(bary, c1, c2, c3);
+                    pixels[bufferIndex] = (col.getRed() << 16) | (col.getGreen() << 8) | col.getBlue();
+                }
             }
         }
     }

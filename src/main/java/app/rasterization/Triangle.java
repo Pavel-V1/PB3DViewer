@@ -1,16 +1,18 @@
 package app.rasterization;
 
+import app.model.Vertex;
+
 import java.awt.*;
 
 public class Triangle {
-    Point a;
-    Point b;
-    Point c;
+    Vertex a;
+    Vertex b;
+    Vertex c;
     Color c1;
     Color c2;
     Color c3;
 
-    public Triangle(Point a, Point b, Point c, Color c1, Color c2, Color c3) {
+    public Triangle(Vertex a, Vertex b, Vertex c, Color c1, Color c2, Color c3) {
         this.a = a;
         this.b = b;
         this.c = c;
