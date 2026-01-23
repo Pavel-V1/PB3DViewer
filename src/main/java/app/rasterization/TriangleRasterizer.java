@@ -1,17 +1,25 @@
 package app.rasterization;
 
+import app.model.Vertex;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
 public class TriangleRasterizer extends JPanel {
-    private static ArrayList<Triangle> mainArrayT = new ArrayList<Triangle>();
+    private static ArrayList<Triangle> mainArrayT = new ArrayList<>();
+    private static Float[][] zBufferThis;
 
-    public static void makeTriangle(Point a, Point b, Point c, Color c1, Color c2, Color c3) {
+    private void setZBuffer(Float[][] zBuffer) {
+        if (zBufferThis == null) {
+            zBufferThis = zBuffer;
+        }
+    }
+
+    public static void makeTriangle(Vertex a, Vertex b, Vertex c, Color c1, Color c2, Color c3) {
         mainArrayT.add(new Triangle(a, b, c, c1, c2, c3));
     }
 
-    public static void makeTriangle(Point a, Point b, Point c, Color cl) {
+    public static void makeTriangle(Vertex a, Vertex b, Vertex c, Color cl) {
         mainArrayT.add(new Triangle(a, b, c, cl, cl, cl));
     }
 
@@ -37,19 +45,37 @@ public class TriangleRasterizer extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         for (Triangle triangle : mainArrayT) {
-            rasterizeTriangle(g, triangle.a, triangle.b, triangle.c, triangle.c1, triangle.c2, triangle.c3);
+            rasterizeTriangle(g, 500, 500, triangle.a, triangle.b, triangle.c,
+                    triangle.c1, triangle.c2, triangle.c3);
         }
     }
 
-    public void rasterizeTriangle(Graphics g, Point a, Point b, Point c, Color c1, Color c2, Color c3) {
+    public void rasterizeTriangle(Graphics g, int width, int height, Vertex a0, Vertex b0, Vertex c0,
+                                  Color c1, Color c2, Color c3, Float[][] zBuffer) {
+        setZBuffer(zBuffer);
+        rasterizeTriangle(g, width, height, a0, b0, c0, c1, c2, c3);
+    }
+
+    private void rasterizeTriangle(Graphics g, int width, int height, Vertex a0, Vertex b0, Vertex c0,
+                                  Color c1, Color c2, Color c3) {
+        Point a = getPointFromVertex(a0, width, height);
+        Point b = getPointFromVertex(b0, width, height);
+        Point c = getPointFromVertex(c0, width, height);
+
         Point bigger = (a.y > b.y ? a : b);
         Point lower = (a.y < b.y ? a : b);
         Point top = bigger.y > c.y ? bigger : c;
         Point bottom = lower.y < c.y ? lower : c;
         Point middle = a != top && a != bottom ? a : b != top && b != bottom ? b : c;
 
-        for (int y = bottom.y; y < middle.y; y++) {
-            int x1 = ((y - bottom.y) * (middle.x - bottom.x) / (middle.y - bottom.y)) + bottom.x;
+        rasterize(g, bottom, middle, bottom, top, middle, c1, c2, c3, a0, b0, c0);
+        rasterize(g, middle, top, bottom, top, middle, c1, c2, c3, a0, b0, c0);
+    }
+
+    private void rasterize(Graphics g, Point down, Point up, Point bottom, Point top,
+                           Point middle, Color c1, Color c2, Color c3, Vertex a0, Vertex b0, Vertex c0) {
+        for (int y = down.y; y < up.y; y++) {
+            int x1 = ((y - down.y) * (up.x - down.x) / (up.y - down.y)) + down.x;
             int x2 = ((y - bottom.y) * (top.x - bottom.x) / (top.y - bottom.y)) + bottom.x;
             if (x1 > x2) {
                 int xt = x1;
@@ -57,28 +83,28 @@ public class TriangleRasterizer extends JPanel {
                 x2 = xt;
             }
             for (int x = x1; x <= x2; x++) {
-                double[] baryCoords = calculateBaryCoords(new Point(x, y), a, b, c);
-                Color interpolatedColor = interpolateColor(baryCoords, c1, c2, c3);
+                double[] baryCoords = calculateBaryCoords(new Point(x, y), bottom, middle, top);
+                if (checkWithZBuffer(baryCoords, new Point(x, y), a0, b0, c0)) {
+                    Color interpolatedColor = interpolateColor(baryCoords, c1, c2, c3);
                     g.setColor(interpolatedColor);
                     g.fillRect(x, y, 1, 1);
+                }
             }
         }
+    }
 
-        for (int y = middle.y; y < top.y; y++) {
-            int x1 = ((y - middle.y) * (top.x - middle.x) / (top.y - middle.y)) + middle.x;
-            int x2 = ((y - bottom.y) * (top.x - bottom.x) / (top.y - bottom.y)) + bottom.x;
-            if (x1 > x2) {
-                int xt = x1;
-                x1 = x2;
-                x2 = xt;
-            }
-            for (int x = x1; x <= x2; x++) {
-                double[] baryCoords = calculateBaryCoords(new Point(x, y), a, b, c);
-                Color interpolatedColor = interpolateColor(baryCoords, c1, c2, c3);
-                g.setColor(interpolatedColor);
-                g.fillRect(x, y, 1, 1);
-            }
+    public static Point getPointFromVertex(Vertex v, int width, int height) {
+        return new Point((int) (v.x() * width + width / 2.0F), (int) (-v.y() * height + height / 2.0F));
+    }
+
+    private static boolean checkWithZBuffer(double[] baryCoords, Point p, Vertex a, Vertex b, Vertex c) {
+        float z = (float) (a.z() * baryCoords[0] + b.z() * baryCoords[1] + c.z() * baryCoords[2]);
+        float zBuff = zBufferThis[p.x][p.y];
+
+        if (z < zBuff) {
+            zBufferThis[p.x][p.y] = z;
         }
+        return z < zBuff;
     }
 
     private double[] calculateBaryCoords(Point p, Point a, Point b, Point c) {
