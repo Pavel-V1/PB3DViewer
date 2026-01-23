@@ -9,7 +9,7 @@ public class Model {//хранит геометрию модели
     private final List<TexCoord> texCoords = new ArrayList<>();
     private final List<Normal> normals = new ArrayList<>();
 
-    public List<Vertex> getVertices(){
+    public List<Vertex> getVertices(){//доступ к списку вершин
         return vertices;
     }
     public List<Polygon> getPolygons(){
@@ -18,7 +18,6 @@ public class Model {//хранит геометрию модели
     public List<TexCoord> getTexCoords() {
         return texCoords;
     }
-
     public List<Normal> getNormals() {
         return normals;
     }
