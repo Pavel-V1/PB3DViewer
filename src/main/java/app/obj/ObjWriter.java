@@ -10,18 +10,20 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
-public class ObjWriter {//сохраняет
+public class ObjWriter {//это класс, который записывает объект Model в формат OBJ
 
     public void write(Model model, Writer writer) throws IOException {
-        if (model == null) throw new IllegalArgumentException("model is null");
-        if (writer == null) throw new IllegalArgumentException("writer is null");
+        if (model == null) //защит от кривого вызова
+            throw new IllegalArgumentException("model is null");
+        if (writer == null)
+            throw new IllegalArgumentException("writer is null");
+        //порядок записи блоков
+        writeVertices(model.getVertices(), writer);//v
+        writeTexCoords(model.getTexCoords(), writer);//vt
+        writeNormals(model.getNormals(), writer);//vn
+        writePolygons(model.getPolygons(), writer);//f
 
-        writeVertices(model.getVertices(), writer);
-        writeTexCoords(model.getTexCoords(), writer);
-        writeNormals(model.getNormals(), writer);
-        writePolygons(model.getPolygons(), writer);
-
-        writer.flush();
+        writer.flush();//все что ты держишь в памяти, немедленно запиши в файл
     }
 
     private void writeVertices(List<Vertex> vertices, Writer writer) throws IOException {
@@ -46,19 +48,23 @@ public class ObjWriter {//сохраняет
         for (Polygon p : polygons) {
             writer.write("f");
 
+            //есть ли вообще vt/vn
             boolean hasVT = p.texCoordIndices() != null && !p.texCoordIndices().isEmpty();
             boolean hasVN = p.normalIndices() != null && !p.normalIndices().isEmpty();
 
-            for (int i = 0; i < p.vertexIndices().size(); i++) {
-                int vIdx = p.vertexIndices().get(i) + 1;
+            for (int i = 0; i < p.vertexIndices().size(); i++) {//цикл по вершинам полигона
+                int vIdx = p.vertexIndices().get(i) + 1;//так как в OBJ индексация с 1, а в программе с 0
 
                 Integer vtIdx = null;
                 Integer vnIdx = null;
 
-                if (hasVT && i < p.texCoordIndices().size()) vtIdx = p.texCoordIndices().get(i) + 1;
-                if (hasVN && i < p.normalIndices().size()) vnIdx = p.normalIndices().get(i) + 1;
+                //есть ли для этой вершины текстурная координата и нормаль, если есть, то берут их индекс если нет то пропускают.
+                if (hasVT && i < p.texCoordIndices().size())
+                    vtIdx = p.texCoordIndices().get(i) + 1;
+                if (hasVN && i < p.normalIndices().size())
+                    vnIdx = p.normalIndices().get(i) + 1;
 
-                writer.write(" ");
+                writer.write(" ");//Формат записи в зависимости от наличия vt/vn
                 if (vtIdx != null && vnIdx != null) {
                     writer.write(vIdx + "/" + vtIdx + "/" + vnIdx);
                 } else if (vtIdx != null) {

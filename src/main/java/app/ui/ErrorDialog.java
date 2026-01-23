@@ -8,7 +8,7 @@ public final class ErrorDialog {//утилита для отображения �
 
     public static void show(Component parent, String title, Exception ex) {
         String details = (ex == null || ex.getMessage() == null) ? "" : ex.getMessage();
-        JOptionPane.showMessageDialog(
+        JOptionPane.showMessageDialog(//формирование текста сообщ
                 parent,
                 title + (details.isEmpty() ? "" : ":\n" + details),
                 "Ошибка",
@@ -16,7 +16,7 @@ public final class ErrorDialog {//утилита для отображения �
         );
     }
 
-    public static void showMessage(Component parent, String title, String message) {
+    public static void showMessage(Component parent, String title, String message) {//ошибка по строке
         JOptionPane.showMessageDialog(
                 parent,
                 message,
