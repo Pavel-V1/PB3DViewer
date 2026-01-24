@@ -6,12 +6,16 @@ import app.math.Vector4;
 import app.model.Model;
 import app.model.Polygon;
 import app.model.Vertex;
+import app.rasterization.ModelRasterization;
+import app.rasterization.TriangleRasterizer;
+import app.rend_prepare.ModelTriangulation;
 import app.scene.Camera;
 import app.scene.SceneController;
 import app.scene.SceneObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.awt.event.*;
 import java.util.List;
 
@@ -152,9 +156,30 @@ public class RenderPanel extends JPanel {
 
         camera.setTarget(new app.math.Vector3(cx, cy, cz));
 
-        float fov = camera.fovRad();
-        float dist = (float) (radius / Math.tan(fov * 0.5f)) * 1.5f;
-        camera.setDistance(dist);
+        boolean isTexEnabled = false; ///
+        List<Polygon> polygons = ModelTriangulation.triangulate(m.getPolygons(), m.getVertices());
+        m.getPolygons().clear();
+        m.getPolygons().addAll(polygons);
+        ModelRasterization.rasterizeModel(m, tvs, g, w, h, s, cx, cy, midX, midY, Color.ORANGE, Color.BLACK, Color.GRAY, isTexEnabled, null);
+
+        g2.setColor(Color.BLACK);
+
+        boolean isMeshEnabled = true; /// Пока что так, а потом привяжу к кнопкам.
+        if (isMeshEnabled) {
+            drawMesh(g2, ps, vs, tvs, cx, cy, s, midX, midY);
+        }
+
+        // подпись
+        g2.drawString("Активная: " + active.name() + " | каркас (X/Y)", 10, 20);
+    }
+
+    private static void drawMesh(Graphics2D g2, List<Polygon> ps, List<Vertex> vs,
+                             ArrayList<Vector4> tvs, int cx, int cy, float s, float midX, float midY) {
+
+        for (Polygon p : ps) {
+            List<Integer> idxs = p.vertexIndices();
+            int n = idxs.size();
+            if (n < 2) continue;
 
         camera.setYawRad(0f);
         camera.setPitchRad(0f);
@@ -242,6 +267,9 @@ public class RenderPanel extends JPanel {
 
         float speed = 0.03f * camera.distance();
 
+                g2.drawLine(x1, y1, x2, y2);
+            }
+        }
         var delta = right.mul(x * speed)
                 .add(up.mul(y * speed))
                 .add(forward.mul(z * speed));

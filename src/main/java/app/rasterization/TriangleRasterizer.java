@@ -1,31 +1,33 @@
 package app.rasterization;
 
+import app.model.TexCoord;
 import app.model.Vertex;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class TriangleRasterizer extends JPanel {
-    private BufferedImage canvas;
-    private int[] pixels;
-    private static ArrayList<Triangle> mainArrayT = new ArrayList<Triangle>();
+public class TriangleRasterizer {
+    private ArrayList<Triangle> mainArrayT = new ArrayList<>();
     private float[] zBuffer;
 
-    public static void makeTriangle(int size, Vertex a, Vertex b, Vertex c, Color c1, Color c2, Color c3) {
+    public void makeTriangle(int size, Vertex a, Vertex b, Vertex c, Color c1, Color c2, Color c3) {
+        makeTriangle(size, a, b, c, c1, c2, c3, null, null, null);
+    }
+
+    public void makeTriangle(int size, Vertex a, Vertex b, Vertex c, Color c1, Color c2, Color c3, TexCoord tc1, TexCoord tc2, TexCoord tc3) {
         Vertex a0 = new Vertex(a.x() * size, a.y() * size, a.z() * size);
         Vertex b0 = new Vertex(b.x() * size, b.y() * size, b.z() * size);
         Vertex c0 = new Vertex(c.x() * size, c.y() * size, c.z() * size);
-        mainArrayT.add(new Triangle(a0, b0, c0, c1, c2, c3));
+        mainArrayT.add(new Triangle(a0, b0, c0, c1, c2, c3, tc1, tc2, tc3));
     }
 
-    public static void makeTriangle(int size, Vertex a, Vertex b, Vertex c, Color cl) {
-        makeTriangle(size, a, b, c, cl, cl, cl);
+    public void makeTriangle(int size, Vertex a, Vertex b, Vertex c, Color cl, TexCoord tc1, TexCoord tc2, TexCoord tc3) {
+        makeTriangle(size, a, b, c, cl, cl, cl, tc1, tc2, tc3);
     }
 
-    public static void removeTriangles() {
+    public void removeTriangles() {
         mainArrayT.clear();
     }
 
@@ -33,38 +35,22 @@ public class TriangleRasterizer extends JPanel {
         return new TriangleRasterizer();
     }
 
-    public static void launch() {
-        JFrame frame = new JFrame("Triangle Rasterization");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(new TriangleRasterizer());
-        frame.pack();
-        frame.setSize(500, 500);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        int w = getWidth();
-        int h = getHeight();
-
-        if (canvas == null || canvas.getWidth() != w || canvas.getHeight() != h) {
-            canvas = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-            pixels = ((DataBufferInt) canvas.getRaster().getDataBuffer()).getData();
-            zBuffer = new float[w * h];
+    public void paint(Graphics g, int width, int height, boolean isTex, Image texture) {
+        int size = width * height;
+        if (zBuffer == null || zBuffer.length != size) {
+            zBuffer = new float[size];
         }
-        Arrays.fill(pixels, Integer.MAX_VALUE);
         Arrays.fill(zBuffer, Float.POSITIVE_INFINITY);
 
         for (Triangle triangle : mainArrayT) {
-            rasterizeTriangle(w, h, triangle.a, triangle.b, triangle.c, triangle.c1, triangle.c2, triangle.c3);
+            rasterizeTriangle(g, width, height, triangle.a, triangle.b, triangle.c, triangle.c1, triangle.c2, triangle.c3,
+                    isTex, triangle.tc1, triangle.tc2, triangle.tc3, texture);
         }
-        g.drawImage(canvas, 0, 0, null);
     }
 
-    public void rasterizeTriangle(int width, int height, Vertex v1, Vertex v2, Vertex v3, Color c1, Color c2, Color c3) {
+    public void rasterizeTriangle(Graphics g, int width, int height, Vertex v1, Vertex v2, Vertex v3, Color c1,
+                                  Color c2, Color c3, boolean isTex, TexCoord tc1, TexCoord tc2, TexCoord tc3, Image texture) {
+
         Point a = new Point((int)v1.x(), (int)v1.y());
         Point b = new Point((int)v2.x(), (int)v2.y());
         Point c = new Point((int)v3.x(), (int)v3.y());
@@ -75,15 +61,26 @@ public class TriangleRasterizer extends JPanel {
         Point bottom = lower.y < c.y ? lower : c;
         Point middle = a != top && a != bottom ? a : b != top && b != bottom ? b : c;
 
-        drawScanline(width, height, bottom.y, middle.y, bottom, middle, top, bottom, v1, v2, v3, c1, c2, c3);
-        drawScanline(width, height, middle.y, top.y, middle, top, top, bottom, v1, v2, v3, c1, c2, c3);
+        drawScanline(g, width, height, bottom.y, middle.y, bottom, middle, top, bottom,
+                v1, v2, v3, c1, c2, c3, isTex, tc1, tc2, tc3, texture
+        );
+        drawScanline(g, width, height, middle.y, top.y, middle, top, top, bottom,
+                v1, v2, v3, c1, c2, c3, isTex, tc1, tc2, tc3, texture
+        );
     }
 
-    private void drawScanline(int width, int height, int yStart, int yEnd, Point p1, Point p2, Point top,
-                              Point bottom, Vertex v1, Vertex v2, Vertex v3, Color c1, Color c2, Color c3) {
+    private void drawScanline(Graphics g, int width, int height, int yStart, int yEnd, Point p1, Point p2,
+                              Point top, Point bottom, Vertex v1, Vertex v2, Vertex v3, Color c1, Color c2,
+                              Color c3, boolean isTex, TexCoord tc1, TexCoord tc2, TexCoord tc3, Image texture) {
+
         if (yStart == yEnd) return;
+
+        Point pV1 = new Point((int)v1.x(), (int)v1.y());
+        Point pV2 = new Point((int)v2.x(), (int)v2.y());
+        Point pV3 = new Point((int)v3.x(), (int)v3.y());
+
         for (int y = yStart; y < yEnd; y++) {
-            if (y < 0 || y >= getHeight()) continue;
+            if (y < 0 || y >= height) continue;
 
             int x1 = ((y - yStart) * (p2.x - p1.x) / (yEnd - yStart)) + p1.x;
             int x2 = ((y - bottom.y) * (top.x - bottom.x) / (top.y - bottom.y)) + bottom.x;
@@ -93,18 +90,26 @@ public class TriangleRasterizer extends JPanel {
             for (int x = x1; x <= x2; x++) {
                 if (x < 0 || x >= width) continue;
 
-                double[] bary = calculateBaryCoords(new Point(x, y),
-                        new Point((int)v1.x(), (int)v1.y()),
-                        new Point((int)v2.x(), (int)v2.y()),
-                        new Point((int)v3.x(), (int)v3.y()));
+                double[] bary = calculateBaryCoords(new Point(x, y), pV1, pV2, pV3);
 
-                float currentZ = (float)(v1.z() * bary[0] + v2.z() * bary[1] + v3.z() * bary[2]);
-                int bufferIndex = y * width + x;
+                if (bary[0] >= -0.01 && bary[1] >= -0.01 && bary[2] >= -0.01) {
+                    float currentZ = (float)(v1.z() * bary[0] + v2.z() * bary[1] + v3.z() * bary[2]);
+                    int idx = y * width + x;
 
-                if (currentZ < zBuffer[bufferIndex]) {
-                    zBuffer[bufferIndex] = currentZ;
-                    Color col = interpolateColor(bary, c1, c2, c3);
-                    pixels[bufferIndex] = (col.getRed() << 16) | (col.getGreen() << 8) | col.getBlue();
+                    if (currentZ < zBuffer[idx]) {
+                        zBuffer[idx] = currentZ;
+                        if (isTex) {
+                            TexCoord tc = interpolateTex(bary, tc1, tc2, tc3);
+                            if (tc != null) {
+                                BufferedImage bi = (BufferedImage) texture;
+                                g.setColor(new Color(bi.getRGB((int) tc.u(), (int) tc.v())));
+                            } else {
+                                g.setColor(Color.BLACK);
+                        } else {
+                            g.setColor(interpolateColor(bary, c1, c2, c3));
+                        }
+                        g.fillRect(x, y, 2, 2);
+                    }
                 }
             }
         }
@@ -124,6 +129,22 @@ public class TriangleRasterizer extends JPanel {
 
     private double abs(double x) {
         return x < 0 ? -x : x;
+    }
+
+    // беру Vector3 от камеры до объекта, -вектор, умножать скалярно на нормаль, получаю затемнение цвета, верну цвет ргб
+
+    private Normal interpolateNormal(double[] baryCoords, Normal n1, Normal n2, Normal n3) {
+        return new Normal((int) (n1.x() * baryCoords[0] + n2.x() * baryCoords[1] + n3.x() * baryCoords[2]),
+                          (int) (n1.y() * baryCoords[0] + n2.y() * baryCoords[1] + n3.y() * baryCoords[2]),
+                          (int) (n1.z() * baryCoords[0] + n2.z() * baryCoords[1] + n3.z() * baryCoords[2]));
+
+    private TexCoord interpolateTex(double[] baryCoords, TexCoord tc1, TexCoord tc2, TexCoord tc3) {
+        if (tc1 != null && tc2 != null && tc3 != null) {
+            return new TexCoord((int) (tc1.u() * baryCoords[0] + tc2.u() * baryCoords[1] + tc3.u() * baryCoords[2]),
+                    (int) (tc1.v() * baryCoords[0] + tc2.v() * baryCoords[1] + tc3.v() * baryCoords[2]));
+        } else {
+            return null;
+        }
     }
 
     private Color interpolateColor(double[] baryCoords, Color c1, Color c2, Color c3) {

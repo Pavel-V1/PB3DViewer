@@ -4,7 +4,7 @@ import app.model.Model;
 import app.model.Polygon;
 import app.model.Vertex;
 import app.rend_prepare.ModelTriangulation;
-
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,19 +46,20 @@ public class ModelRasterizationTest {
         return list;
     }
 
-    public static void main(String[] args) {
-        List<Vertex> vertices = getVerticesAndPolygons().get(0);
-        List<Polygon> polygons = getVerticesAndPolygons().get(1);
-        List<Integer> indexes = new ArrayList<>();
-        indexes.add(3);
-        indexes.add(4);
-        indexes.add(7);
-        polygons.add(new Polygon(indexes, null, null));
-
-        Model model = new Model();
-        model.getPolygons().addAll(ModelTriangulation.triangulate(polygons, vertices));
-        model.getVertices().addAll(vertices);
-
-        ModelRasterization.rasterizeModel(model, 200, new Color(255, 119, 21));
-    }
+//    public static void main(String[] args) {
+//        List<Vertex> vertices = getVerticesAndPolygons().get(0);
+//        List<Polygon> polygons = getVerticesAndPolygons().get(1);
+//        List<Integer> indexes = new ArrayList<>();
+//        indexes.add(3);
+//        indexes.add(4);
+//        indexes.add(7);
+//        polygons.add(new Polygon(indexes, null, null));
+//
+//        Model model = new Model();
+//        model.getPolygons().addAll(ModelTriangulation.triangulate(polygons, vertices));
+//        model.getVertices().addAll(vertices);
+//
+//        Graphics g = ;
+//        ModelRasterization.rasterizeModel(model, g, 200, 500, 500, new Color(255, 119, 21));
+//    }
 }
