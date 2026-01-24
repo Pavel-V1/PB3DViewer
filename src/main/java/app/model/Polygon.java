@@ -1,5 +1,4 @@
 package app.model;
-
 import java.util.List;
 //один полигон
 public record Polygon(List<Integer> vertexIndices,

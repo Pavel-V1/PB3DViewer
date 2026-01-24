@@ -5,7 +5,6 @@ import app.model.Model;
 import app.model.Vertex;
 import app.model.Normal;
 import app.model.TexCoord;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -15,7 +14,7 @@ import java.util.List;
 public class ObjReader {//читает
 
     public Model read(Reader reader) throws IOException {
-        BufferedReader br = new BufferedReader(reader);
+        BufferedReader br = new BufferedReader(reader);//BufferedReader делает чтение быстрее и даёт удобный метод readLine()
 
         Model model = new Model();
         List<Vertex> vertices = model.getVertices();
@@ -25,13 +24,13 @@ public class ObjReader {//читает
 
         String line;
         while ((line = br.readLine()) != null) {
-            line = line.trim();
+            line = line.trim();//убирает пробелы в начале/конце
 
             if (line.isEmpty() || line.startsWith("#")) {
-                continue;
+                continue;//пропуск пустых строк и комментариев
             }
 
-            if (line.startsWith("v ")) {
+            if (line.startsWith("v ")) {//определение типа строки
                 vertices.add(parseVertex(line));
             } else if (line.startsWith("vt ")) {
                 texCoords.add(parseTexCoord(line));
@@ -43,10 +42,10 @@ public class ObjReader {//читает
 
         }
 
-        return model;
+        return model;//возвращаем заполненную модель
     }
 
-    private Vertex parseVertex(String line) {
+    private Vertex parseVertex(String line) {//берёт одну строку OBJфайла вида v x y z и превращает её в объект Vertex
         String[] parts = line.split("\\s+");
         if (parts.length < 4) {
             throw new IllegalArgumentException("Некорректная вершина: " + line);
@@ -59,14 +58,14 @@ public class ObjReader {//читает
         return new Vertex(x, y, z);
     }
 
-    private Polygon parsePolygon(String line) {
+    private Polygon parsePolygon(String line) {//Берёт строку грани f ... и превращает её в объект Polygon, где хранятся индексы вершин, текстур и нормалей
         String[] parts = line.split("\\s+");
 
         List<Integer> v = new ArrayList<>();
         List<Integer> vt = new ArrayList<>();
         List<Integer> vn = new ArrayList<>();
 
-        for (int i = 1; i < parts.length; i++) {
+        for (int i = 1; i < parts.length; i++) {//цикл по вершинам граней
             String[] idx = parts[i].split("/", -1); // важно: -1 сохраняет пустые поля
 
             if (idx.length < 1 || idx[0].isEmpty()) {
@@ -87,7 +86,7 @@ public class ObjReader {//читает
     }
 
 
-    private TexCoord parseTexCoord(String line) {
+    private TexCoord parseTexCoord(String line) {//берёт строку vt u v и превращает её в объект TexCoord(u, v)
         String[] p = line.split("\\s+");
         return new TexCoord(
                 Float.parseFloat(p[1]),
@@ -95,7 +94,7 @@ public class ObjReader {//читает
         );
     }
 
-    private Normal parseNormal(String line) {
+    private Normal parseNormal(String line) {//берёт строку vn x y z и превращает её в объект Normal(x, y, z)
         String[] p = line.split("\\s+");
         return new Normal(
                 Float.parseFloat(p[1]),
