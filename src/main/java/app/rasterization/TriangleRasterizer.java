@@ -100,8 +100,11 @@ public class TriangleRasterizer {
                         zBuffer[idx] = currentZ;
                         if (isTex) {
                             TexCoord tc = interpolateTex(bary, tc1, tc2, tc3);
-                            BufferedImage bi = (BufferedImage) texture;
-                            g.setColor(new Color(bi.getRGB((int) tc.u(), (int) tc.v())));
+                            if (tc != null) {
+                                BufferedImage bi = (BufferedImage) texture;
+                                g.setColor(new Color(bi.getRGB((int) tc.u(), (int) tc.v())));
+                            } else {
+                                g.setColor(Color.BLACK);
                         } else {
                             g.setColor(interpolateColor(bary, c1, c2, c3));
                         }
@@ -127,6 +130,13 @@ public class TriangleRasterizer {
     private double abs(double x) {
         return x < 0 ? -x : x;
     }
+
+    // беру Vector3 от камеры до объекта, -вектор, умножать скалярно на нормаль, получаю затемнение цвета, верну цвет ргб
+
+    private Normal interpolateNormal(double[] baryCoords, Normal n1, Normal n2, Normal n3) {
+        return new Normal((int) (n1.x() * baryCoords[0] + n2.x() * baryCoords[1] + n3.x() * baryCoords[2]),
+                          (int) (n1.y() * baryCoords[0] + n2.y() * baryCoords[1] + n3.y() * baryCoords[2]),
+                          (int) (n1.z() * baryCoords[0] + n2.z() * baryCoords[1] + n3.z() * baryCoords[2]));
 
     private TexCoord interpolateTex(double[] baryCoords, TexCoord tc1, TexCoord tc2, TexCoord tc3) {
         if (tc1 != null && tc2 != null && tc3 != null) {
